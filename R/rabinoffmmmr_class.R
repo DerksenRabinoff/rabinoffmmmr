@@ -98,11 +98,11 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
         names(alphas) <- saturated
         names(gammas) <- saturated
         names(thetas) <- adstocked
-        newhyps <- data.frame(predictor = original_predictors)
+        newhyps <- data.frame(predictors = original_predictors)
         newhyps %<>% dplyr::mutate(
-                         alpha = ifelse(predictor %in% saturated, alphas[predictor], NA),
-                         gamma = ifelse(predictor %in% saturated, gammas[predictor], NA),
-                         theta = ifelse(predictor %in% adstocked, thetas[predictor], NA))
+                         alphas = ifelse(predictor %in% saturated, alphas[predictor], NA),
+                         gammas = ifelse(predictor %in% saturated, gammas[predictor], NA),
+                         thetas = ifelse(predictor %in% adstocked, thetas[predictor], NA))
         return(newhyps)                         
     }
 
@@ -252,12 +252,25 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
     object$train <- data
     object$de <- gen_model
     object$hyps <- fit_funcs[[2]](gen_model@solution)
+
+    gammaTrans <- unlist(purrr::map(object$saturated,
+                                    .f=function(x){
+                                        row <- dplyr::filter(object$hyps, predictors == x)
+                                        gamma_to_gammatrans(
+                                            data[[x]],
+                                            row$gammas,
+                                            decay = ifelse(x %in% object$adstocked,
+                                                           row$thetas[x], NA))
+                                    }))
+    names(gammaTrans) <- names(gammas)
+
+    
     if(!is.null(object$seed)){set.seed(object$seed)}
     object$glm <- fit_funcs[[3]](gen_model@solution, model=TRUE, seed=object$seed)
     object$fitness <- fit_funcs[[3]]
     
     coef_frame <- data.frame(
-        predictor = rownames(coef(object$glm)),
+        predictors = rownames(coef(object$glm)),
         # pull coefficients from the glm with lowest cross validated error
         coef = c(
             object$glm$glmnet.fit$a0[object$glm$index[1,1]],
@@ -274,12 +287,14 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
 #' Get predictions from an mmmr_fit object
 #'
 #' @param object An mmmr object
-#' @param newdata A dataframe to get new predictions from. 
-#'
+#' @param newdata A dataframe to get new predictions from.
+#' @param prophetize If set to TRUE, trend, holidays, and seasonality columns will be added to the data
+#' @param compute_gammatrans If set to TRUE, new values of gammaTrans will be computed with the new data. If false, gammaTrans computed with the training data will be used.
+#' 
 #' @return An S3 object of type mmmr
 #' 
 #' @export
-predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE){
+predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE, compute_gammatrans = FALSE){
 
     if(is.null(newdata)){
         newdata <- object$train
@@ -300,23 +315,23 @@ predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE){
     hyps <- list(0)
 
     hyps$alphas <- hypsframe %>%
-        dplyr::filter(!is.na(alpha)) %>%
-        dplyr::select(predictor, alpha) %>%
+        dplyr::filter(!is.na(alphas)) %>%
+        dplyr::select(predictor, alphas) %>%
         frame_to_named_vec()
 
     hyps$gammas <- hypsframe %>%
-        dplyr::filter(!is.na(gamma)) %>%
-        dplyr::select(predictor, gamma) %>%
+        dplyr::filter(!is.na(gammas)) %>%
+        dplyr::select(predictor, gammas) %>%
         frame_to_named_vec()
 
     hyps$thetas <- hypsframe %>%
-        dplyr::filter(!is.na(theta)) %>%
-        dplyr::select(predictor, theta) %>%
+        dplyr::filter(!is.na(thetas)) %>%
+        dplyr::select(predictor, thetas) %>%
         frame_to_named_vec()    
 
     intercept <- dplyr::filter(object$hyps, predictor == "(Intercept)")$coef
     
-    newdata %<>% apply_media_transforms(hyps) %>%
+    newdata %<>% apply_media_transforms(hyps, compute_gammatrans = compute_gammatrans) %>%
         dplyr::mutate(
                    dplyr::across(
                               .cols = dplyr::any_of(object$predictors),

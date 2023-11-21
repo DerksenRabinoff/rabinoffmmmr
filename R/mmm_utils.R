@@ -8,14 +8,32 @@
 #'
 #' @param input The input vector to be transformed
 #' @param alpha The alpha parameter for transformation. This controls the shape of the curve.
-#' @param gammatrans The gammatrans parameter for transformation. This controls the size of the curve.
+#' @param gammatrans The gammatrans parameter for transformation. This controls the inflection point of the curve.
 #'
 #' @return The transformed vector
 #' 
 #' @export
-
 saturation_hill_trans <- function(input, alpha, gammatrans){
     input^alpha / (input^alpha + gammatrans^alpha)
+}
+
+#' Saturation Hill Derivative
+#'
+#' Like saturation_hill_trans, but the derivative of the curve
+#'
+#' @param input The input vector to be transformed
+#' @param alpha The alpha parameter for transformation. This controls the shape of the curve.
+#' @param gammatrans The gammatrans parameter for transformation. This controls the inflection point of the curve.
+#'
+#' @return The transformed vector
+#' 
+#' @export
+saturation_hill_trans_deriv <- function(input, alpha, gammatrans){
+    num <- input^alpha
+    numder <- (alpha*input)^(alpha - 1)
+    denum <- (input^alpha + gammatrans^alpha)
+    denumder <- numder + alpha*(gammatrans^(alpha-1))
+    return((numder*denum + num*denumder)/(denum^2))
 }
 
 #' Geometric Adstock
@@ -23,7 +41,7 @@ saturation_hill_trans <- function(input, alpha, gammatrans){
 #' Applies geometric adstocking to vector
 #'
 #' @param input The input vector to be transformed
-#' @param alpha The decay rate parameter
+#' @param decay The decay rate parameter. Also called "theta" in other contexts.
 #'
 #' @return The transformed vector
 #' 

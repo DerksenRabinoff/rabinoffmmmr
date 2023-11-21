@@ -6,5 +6,4 @@
 #' @name rabinoffmmmr
 #' @import assertthat
 #' @importFrom magrittr %>% %<>%
-#' @useDynLib <package-name>
 NULL

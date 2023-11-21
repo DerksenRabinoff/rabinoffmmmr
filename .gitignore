@@ -4,3 +4,9 @@
 .httr-oauth
 .DS_Store
 .quarto
+*~
+/R/\#*\#
+/R/.\#*\#
+/R/.\#*
+/README.rmd~
+/R/top_level_test.R
