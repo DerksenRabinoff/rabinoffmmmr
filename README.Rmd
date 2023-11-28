@@ -25,7 +25,7 @@ The goal of rabinoffmmmr is to provide an interface for building and employing m
 You can install the development version of rabinoffmmmr like so:
 
 ``` r
-# FILL THIS IN! HOW CAN PEOPLE INSTALL YOUR DEV PACKAGE?
+devtools::install_github("DerksenRabinoff/rabinoffmmmr")
 ```
 
 ## Example
