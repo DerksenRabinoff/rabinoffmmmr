@@ -175,6 +175,8 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
 #' Creates a media mix model object. Use `fit` to train the model.
 #'
 #' @param predictors A charactor vector containing the names of the predictor columns of the data.
+#' @param saturated A character vector containing the names of predictor columns for which you'd like to calculated diminishing returns.
+#' @param adstocked A character vector containing the names of predictor columns for which you'd like to calculated adstocking effects.
 #' @param dep_col A string: the name of the dependent variable of the data.
 #' @param date_col A string: the name of the date variable of the data.
 #' @param alphas_low A named numeric vector indicating the minimum value for the alpha parameter for some media channels. If omitted, defaults are used.
@@ -290,11 +292,12 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
 #' @param newdata A dataframe to get new predictions from.
 #' @param prophetize If set to TRUE, trend, holidays, and seasonality columns will be added to the data
 #' @param compute_gammatrans If set to TRUE, new values of gammaTrans will be computed with the new data. If false, gammaTrans computed with the training data will be used.
+#' @param ... Not currently used
 #' 
 #' @return An S3 object of type mmmr
 #' 
 #' @export
-predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE, compute_gammatrans = FALSE){
+predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE, compute_gammatrans = FALSE, ...){
 
     if(is.null(newdata)){
         newdata <- object$train
@@ -355,11 +358,11 @@ predict.mmmr_fit <- function(object, newdata = NULL, prophetize = FALSE, compute
 #' @param object An mmmr object
 #' @param complete If TRUE, NA coefficients will be included
 #' @param params If TRUE, a dataframe including the alpha, gamma, and theta parameters will be returned.
-#'
+#' @param ... Not currently used
 #' @return An S3 object of type mmmr
 #' 
 #' @export
-coef.mmmr_fit <- function(object, complete = TRUE, params = FALSE){
+coef.mmmr_fit <- function(object, complete = TRUE, params = FALSE, ...){
     return <- object$hyps
     if(!complete){
         return %<>% dplyr::filter(!is.na(coef))

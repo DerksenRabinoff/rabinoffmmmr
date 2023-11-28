@@ -9,7 +9,7 @@ adstock_geometric(input, decay)
 \arguments{
 \item{input}{The input vector to be transformed}
 
-\item{alpha}{The decay rate parameter}
+\item{decay}{The decay rate parameter. Also called "theta" in other contexts.}
 }
 \value{
 The transformed vector

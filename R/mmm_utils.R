@@ -56,8 +56,6 @@ adstock_geometric <- function(input, decay){
     return(output_vec)
 }
 
-
-
 #' Calculate Gamma Trans
 #'
 #' The gamma parameter controls the point of diminishing returns. For consistency, gamma is given as a number between 0 and 1. Gammatrans is gamma scaled up sensibly to the size of the input.
@@ -162,11 +160,11 @@ frame_to_named_vec <- function(data){
 #' @param date_col The name of the date variable.
 #' @param predictors The names of the predictor variables. If NULL, then all variables will be used other than the dep_col.
 #' @param country The country code to be used to derive the "holidays" column. Valid country codes include any in the "country" column of prophet::generated_holidays.
-#' @param A prophet model object. If NULL, one will be created.
+#' @param prph A prophet model object. If NULL, one will be created.
 #' @param daily.seasonality If TRUE, daily seasonality will be computed. Currently non-functional.
 #' @param weekly.seasonality If TRUE, weekly seasonality will be computed. Currently non-functional.
 #' @param ... Other arguments passed to prophet::prophet().
-#' @return The gammatrans parameter (a single numeric value)
+#' @return A dataframe similar to `data` but supplemented with `trend`, `yearly`, and `holidays` variables.
 #' 
 #' @export
 prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = "CA", prph = NULL, daily.seasonality = FALSE, weekly.seasonality = FALSE, ...){

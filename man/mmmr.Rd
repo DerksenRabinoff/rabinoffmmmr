@@ -23,6 +23,10 @@ mmmr(
 \arguments{
 \item{predictors}{A charactor vector containing the names of the predictor columns of the data.}
 
+\item{saturated}{A character vector containing the names of predictor columns for which you'd like to calculated diminishing returns.}
+
+\item{adstocked}{A character vector containing the names of predictor columns for which you'd like to calculated adstocking effects.}
+
 \item{dep_col}{A string: the name of the dependent variable of the data.}
 
 \item{date_col}{A string: the name of the date variable of the data.}

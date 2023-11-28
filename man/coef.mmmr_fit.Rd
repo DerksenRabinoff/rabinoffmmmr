@@ -4,7 +4,7 @@
 \alias{coef.mmmr_fit}
 \title{coef.mmmr_fit}
 \usage{
-\method{coef}{mmmr_fit}(object, complete = TRUE, params = FALSE)
+\method{coef}{mmmr_fit}(object, complete = TRUE, params = FALSE, ...)
 }
 \arguments{
 \item{object}{An mmmr object}
@@ -12,6 +12,8 @@
 \item{complete}{If TRUE, NA coefficients will be included}
 
 \item{params}{If TRUE, a dataframe including the alpha, gamma, and theta parameters will be returned.}
+
+\item{...}{Not currently used}
 }
 \value{
 An S3 object of type mmmr

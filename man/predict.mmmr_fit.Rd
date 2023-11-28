@@ -4,7 +4,13 @@
 \alias{predict.mmmr_fit}
 \title{predict.mmmr_fit}
 \usage{
-\method{predict}{mmmr_fit}(object, newdata = NULL, prophetize = FALSE, compute_gammatrans = FALSE)
+\method{predict}{mmmr_fit}(
+  object,
+  newdata = NULL,
+  prophetize = FALSE,
+  compute_gammatrans = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{An mmmr object}
@@ -14,6 +20,8 @@
 \item{prophetize}{If set to TRUE, trend, holidays, and seasonality columns will be added to the data}
 
 \item{compute_gammatrans}{If set to TRUE, new values of gammaTrans will be computed with the new data. If false, gammaTrans computed with the training data will be used.}
+
+\item{...}{Not currently used}
 }
 \value{
 An S3 object of type mmmr

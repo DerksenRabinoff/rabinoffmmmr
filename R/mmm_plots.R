@@ -62,3 +62,58 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     return(g)
 
 }
+
+#' Plot Adstocking Curve
+#'
+#' Produces a ggplot2 object of an adstocking curve for a specific media channel.
+#'
+#' @param object A fitted mmmr model
+#' @param channel The name of the media channel to plot
+#' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' 
+#' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
+#' 
+#' @export
+plot_adstocking <- function(object, channel, xy_only = FALSE, ...){
+
+    hyps <- coef(object, complete = TRUE, params = TRUE) %>%
+        dplyr::filter(predictor == channel)
+
+    print(length(hyps$gammaTrans))
+    
+    seqlen <- 200
+    
+    repeat{
+        xs <- seq(from = 0, to = 2*hyps$gammaTrans, length.out = seqlen)
+
+        ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)
+        ys_diff <- ys[2:length(ys)] - ys[1:(length(ys)-1)]
+        
+        lim <- quantile(ys_diff, probs=.1)
+        cut <- which(ys_diff < lim)
+        if(length(cut) == 0){
+            seqlen <- seqlen + 50
+        } else{break}
+    }
+
+    cut <- cut[1]
+
+    xs <- xs[1:cut]
+    ys <- ys[1:cut]
+    
+    if(!rate){
+        ys <- adstock_geometric(xs, hyps$thetas)
+    }
+
+    plotframe <- data.frame(Media = xs, `Affective Exposure` = ys)
+    g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = `Affective Exposure`))        
+
+    if(xy_only){return(plotframe)}
+    
+    g <- g +
+        ggplot2::geom_line() +
+        tidyquant::theme_tq()
+
+    return(g)
+
+}
