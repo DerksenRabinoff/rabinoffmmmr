@@ -27,16 +27,16 @@ prophetize_df(
 
 \item{country}{The country code to be used to derive the "holidays" column. Valid country codes include any in the "country" column of prophet::generated_holidays.}
 
+\item{prph}{A prophet model object. If NULL, one will be created.}
+
 \item{daily.seasonality}{If TRUE, daily seasonality will be computed. Currently non-functional.}
 
 \item{weekly.seasonality}{If TRUE, weekly seasonality will be computed. Currently non-functional.}
 
 \item{...}{Other arguments passed to prophet::prophet().}
-
-\item{A}{prophet model object. If NULL, one will be created.}
 }
 \value{
-The gammatrans parameter (a single numeric value)
+A dataframe similar to \code{data} but supplemented with \code{trend}, \code{yearly}, and \code{holidays} variables.
 }
 \description{
 Take a dataframe with a date column. Use Meta's "prophet" to add a trend, seasonality, and holidays column to the dataframe.
