@@ -172,8 +172,9 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     ## Prophet is picky about names. Storing original names and cleaning
     original_names <- names(data)
     original_predictors <- predictors
-    
+
     names(data)[which(names(data) == dep_col)] <- "y"
+
     names(data)[which(names(data) == date_col)] <- "ds"
 
     data <- janitor::clean_names(data)
@@ -182,13 +183,13 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     names(toreplace) <- setdiff(names(data), "ds")
     data %<>% tidyr::replace_na(toreplace)
     rm(toreplace)
-    
+
     if(is.null(predictors)){
         predictors <- setdiff(names(data), c("y", "ds"))
     } else{
         predictors <- janitor::make_clean_names(predictors)
     }
-    
+
     if(is.null(prph)){
         prph <- prophet::prophet(
                              daily.seasonality = daily.seasonality,
@@ -203,9 +204,9 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
             invisible(prph <- prophet::add_regressor(prph, predictor))
         }
     }
-    
+
     dat_fit <- dplyr::select(data, dplyr::any_of(c("ds", "y", predictors)))
-    
+
     prph %<>% prophet::fit.prophet(dat_fit) %>%
         stats::predict(dat_fit) %>%
         dplyr::select(dplyr::any_of(c("ds", "yearly", "trend", "holidays"))) %>%
@@ -215,6 +216,6 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
 
     names(data) <- original_names
 
-    return(dplyr::left_join(data, prph))    
+    return(dplyr::left_join(data, prph))
     
 }

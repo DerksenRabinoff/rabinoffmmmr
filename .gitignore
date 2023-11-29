@@ -5,6 +5,7 @@
 .DS_Store
 .quarto
 *~
+/data/.~lock.ad_spend_sample_data.csv#
 /R/\#*\#
 /R/.\#*\#
 /R/.\#*

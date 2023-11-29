@@ -72,7 +72,6 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
     ## Instantiated a prophet model.
     prph <- prophet::prophet(daily.seasonality = FALSE, weekly.seasonality = FALSE)
 
-    
     if(!is.null(country)){
         prph$country_holidays <- country
     }
@@ -100,14 +99,14 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
         names(thetas) <- adstocked
         newhyps <- data.frame(predictors = original_predictors)
         newhyps %<>% dplyr::mutate(
-                         alphas = ifelse(predictor %in% saturated, alphas[predictor], NA),
-                         gammas = ifelse(predictor %in% saturated, gammas[predictor], NA),
-                         thetas = ifelse(predictor %in% adstocked, thetas[predictor], NA))
+                         alphas = ifelse(predictors %in% saturated, alphas[predictors], NA),
+                         gammas = ifelse(predictors %in% saturated, gammas[predictors], NA),
+                         thetas = ifelse(predictors %in% adstocked, thetas[predictors], NA))
         return(newhyps)                         
     }
 
     ## The fitness function for use in GA::de
-    mmm_fitness <- function(params, model = FALSE, seed=seed){
+    mmm_fitness <- function(params, model = FALSE, seed=seed, silent=FALSE){
 
         sat_names <- saturated
         ads_names <- adstocked
@@ -127,7 +126,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
                                                 gammas[x],
                                                 decay = ifelse(x %in% ads_names, thetas[x], NA))
                                         }))
-        names(gammaTrans) <- names(gammas)
+        names(gammaTrans) <- sat_names
 
         ## Apply adstocking transformation to adstocked channels
         datmod %<>% dplyr::mutate(
@@ -146,9 +145,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
                                                   gammaTrans[dplyr::cur_column()])}))
 
         ## Fitting prophet and extracting seasonality, trend, and holiday components
-
-        datmod %<>% prophetize_df(datmod, dep_col, date_col, predictors = predictors, country = country, prph = prph)
-
+        datmod %<>% prophetize_df(dep_col, date_col, predictors = predictors, country = country, prph = prph)
         ## Setting up ridge regression fit for the chosen alpha, gamma, and theta parameters
         omits <- date_col
         lambdas <- 10^seq(5,-5, by = -.05)
@@ -160,7 +157,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
 
         glm_cv <- glmnet::cv.glmnet(datmod_matrix, dep, alpha = 0, lambda = lambdas, lower.limits = lower, keep = TRUE)
         error <- min(glm_cv$cvm)
-        print(glue::glue("Model error: {error}"))
+        if(!silent){print(glue::glue("Model error: {error}"))}
         
         ## When used with GA::de, only the error is returned.
         if(model){
@@ -246,15 +243,15 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
                                   country = object$country)
 
     #Fitting with the genetic algorithm
-    print("Fitting with de")
     gen_model <- GA::de(fit_funcs[[3]], lower = fit_funcs[[1]][[1]], upper = fit_funcs[[1]][[2]], seed=object$seed, maxiter = maxiter, ...)
-    print("Done fit")
+
     #Setting up the mmmr_fit object
     mod_fit <- object
     object$train <- data
     object$de <- gen_model
     object$hyps <- fit_funcs[[2]](gen_model@solution)
-
+    print("hyps")
+    print(object$hyps)
     gammaTrans <- unlist(purrr::map(object$saturated,
                                     .f=function(x){
                                         row <- dplyr::filter(object$hyps, predictors == x)
@@ -264,8 +261,8 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
                                             decay = ifelse(x %in% object$adstocked,
                                                            row$thetas[x], NA))
                                     }))
-    names(gammaTrans) <- names(gammas)
-
+    
+    names(gammaTrans) <- object$saturated
     
     if(!is.null(object$seed)){set.seed(object$seed)}
     object$glm <- fit_funcs[[3]](gen_model@solution, model=TRUE, seed=object$seed)
@@ -278,7 +275,7 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
             object$glm$glmnet.fit$a0[object$glm$index[1,1]],
             object$glm$glmnet.fit$beta[,object$glm$index[1,1]]
             ))
-    object$hyps <- dplyr::full_join(coef_frame, object$hyps)
+    invisible(object$hyps <- dplyr::full_join(coef_frame, object$hyps))
     
     class(object) <- c("mmmr_fit", class(object))
     return(object)
@@ -373,6 +370,5 @@ coef.mmmr_fit <- function(object, complete = TRUE, params = FALSE, ...){
         return(frame_to_named_vec(return))
     }
 }
-
 
 

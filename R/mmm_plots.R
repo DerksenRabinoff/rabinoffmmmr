@@ -57,7 +57,7 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     
     g <- g +
         ggplot2::geom_line() +
-        tidyquant::theme_tq()
+        ggplot2::theme(...)
 
     return(g)
 
@@ -81,38 +81,21 @@ plot_adstocking <- function(object, channel, xy_only = FALSE, ...){
 
     print(length(hyps$gammaTrans))
     
-    seqlen <- 200
-    
-    repeat{
-        xs <- seq(from = 0, to = 2*hyps$gammaTrans, length.out = seqlen)
+    seqlen <- 10
 
-        ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)
-        ys_diff <- ys[2:length(ys)] - ys[1:(length(ys)-1)]
-        
-        lim <- quantile(ys_diff, probs=.1)
-        cut <- which(ys_diff < lim)
-        if(length(cut) == 0){
-            seqlen <- seqlen + 50
-        } else{break}
-    }
+    xs <- rep(0, times = seqlen)
 
-    cut <- cut[1]
+    xs[1] <- hyps$gammaTrans
 
-    xs <- xs[1:cut]
-    ys <- ys[1:cut]
-    
-    if(!rate){
-        ys <- adstock_geometric(xs, hyps$thetas)
-    }
+    ys <- adstock_geometric(xs, hyps$thetas)
 
-    plotframe <- data.frame(Media = xs, `Affective Exposure` = ys)
-    g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = `Affective Exposure`))        
+    plotframe <- data.frame(Media = xs, `Effective Exposure` = ys)
+    g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = `Effective Exposure`))        
 
     if(xy_only){return(plotframe)}
     
-    g <- g +
-        ggplot2::geom_line() +
-        tidyquant::theme_tq()
+    g <- g + ggplot2::geom_line() +
+        ggplot2::theme(...)
 
     return(g)
 
