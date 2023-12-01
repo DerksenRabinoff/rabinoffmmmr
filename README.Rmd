@@ -33,7 +33,7 @@ You can install the development version of rabinoffmmmr like so:
 
 Attaching rabinoffmmmr and loading data
 
-```{r setup, echo = FALSE}
+```{r setup, eval = FALSE}
 library(rabinoffmmmr)
 data <- readr::read_csv("data/ad_spend_sample_data.csv")
 ```
@@ -57,7 +57,7 @@ predictor_vars <- setdiff(names(data), c(dependent, date))
 ## Make sure the date variable is of type "Date" and that every row has a date
 data[[date]] <- lubridate::as_date(data[[date]], format = "%B %d, %Y")
 data %<>% dplyr::filter(!is.na(`Week Starting`))
-data %>% knitr::kable()
+head(data) %>% knitr::kable()
 ```
  
 Set up an mmmr model
@@ -67,7 +67,7 @@ model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocke
 ```
  
 Train the model
-```{r training}
+```{r training, eval = FALSE}
 start_time <- Sys.time()
 model_fit <- fit.mmmr(object = model, data = data, silent = TRUE, maxiter = 1)
 print(glue::glue("Time elapsed: {Sys.time() - start_time}"))
