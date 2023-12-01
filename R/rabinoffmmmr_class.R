@@ -50,12 +50,12 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
     thetas_high <- supplement_bound(adstocked, thetas_high, .9)
     thetas_low <- supplement_bound(adstocked, thetas_low, 0)    
 
-                                        #copy data for processing
+    ## copy data for processing
     datmod <- data
     sat_and_adstocked <- intersect(saturated, adstocked)
 
-                                        #It's assumed all variables in the dataframe are predictors.
-                                        #TODO use a formula input instead of this assumption
+    ## It's assumed all variables in the dataframe are predictors.
+    ## TODO use a formula input instead of this assumption
     predictors <- setdiff(names(datmod), c(dep_col, date_col))
 
                                         #Replace NA with 0
@@ -90,10 +90,11 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
     serialized_bounds <- list(low_bounds = slower, high_bounds = shigher)
 
     ## A function to return. This takes the solution of the GA::de model and converts it into named vectors of the alpha, gamma, and theta solutions.
+    
     unserialize_hyperparams <- function(params){
         alphas <- params[1:length(saturated)]
         gammas <- params[(length(saturated) + 1):(2*length(saturated))]
-        thetas <- params[(2*length(adstocked)+1):length(params)]
+        thetas <- params[(2*length(saturated)+1):length(params)]
         names(alphas) <- saturated
         names(gammas) <- saturated
         names(thetas) <- adstocked
@@ -106,7 +107,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
     }
 
     ## The fitness function for use in GA::de
-    mmm_fitness <- function(params, model = FALSE, seed=seed, silent=FALSE){
+    mmm_fitness <- function(params, model = FALSE, seed=seed, silent=FALSE, ...){
 
         sat_names <- saturated
         ads_names <- adstocked
@@ -116,8 +117,11 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
         ## Extract the parameters from "params"
         alphas <- params[1:num_sat]
         gammas <- params[(num_sat + 1):(2*num_sat)]
-        thetas <- params[((2*num_ad) + 1):length(params)]
+        thetas <- params[((2*num_sat) + 1):length(params)]
 
+        names(thetas) <- ads_names
+        names(alphas) <- sat_names
+        names(gammas) <- sat_names
         ## Compute gammaTrans. This scales the gamma parameter with the media channel to a reasonable inflection point.
         gammaTrans <- unlist(purrr::map(sat_names,
                                         .f=function(x){
@@ -146,22 +150,23 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
 
         ## Fitting prophet and extracting seasonality, trend, and holiday components
         datmod %<>% prophetize_df(dep_col, date_col, predictors = predictors, country = country, prph = prph)
+        predictors <- c(predictors, "yearly", "trend", "holidays")
         ## Setting up ridge regression fit for the chosen alpha, gamma, and theta parameters
         omits <- date_col
-        lambdas <- 10^seq(5,-5, by = -.05)
+        lambdas <- 10^seq(-3,-5, by = -.05)
         datmodcut <- dplyr::filter(datmod, !is.na(trend))
         datmod_matrix <- as.matrix(dplyr::select(datmodcut, dplyr::any_of(setdiff(predictors, omits))))
         ## Lower bounds for the glmnet. We assume non-negative effect from media channels. Holidays, trend, and seasonality can have negative effect.
         lower <- ifelse(setdiff(predictors, omits) %in% c(sat_names, ads_names), 0, -Inf)
         dep <- datmodcut[[dep_col]]
 
-        glm_cv <- glmnet::cv.glmnet(datmod_matrix, dep, alpha = 0, lambda = lambdas, lower.limits = lower, keep = TRUE)
+        glm_cv <- glmnet::cv.glmnet(datmod_matrix, dep, alpha = 0, lower.limits = lower, keep = TRUE, ...)
         error <- min(glm_cv$cvm)
         if(!silent){print(glue::glue("Model error: {error}"))}
         
         ## When used with GA::de, only the error is returned.
         if(model){
-            return(glm_cv)}
+            return(list(glm_cv, datmodcut))}
         else{return(-error)}
     }
     return(list(serialized_bounds, unserialize_hyperparams, mmm_fitness))
@@ -215,7 +220,7 @@ mmmr <- function(predictors, saturated, adstocked, dep_col, date_col, alphas_low
 #' @param object The mmmr object to be used for fitting.
 #' @param data A dataframe to be used for fitting.
 #' @param maxiter Maximum number of iterations for the genetic algorithm. Passed to GA::de
-#' @param ... Other argument passed to GA::de
+#' @param ... Other argument passed to GA::de. The ... argument to GA::de are passed to the fitness function, which then gets passed to the glmnet::cv.glmnet function.
 #' 
 #' @return An S3 object of type mmmr_fit
 #' 
@@ -241,7 +246,7 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
                                   thetas_high = object$thetas_high,
                                   seed = object$seed,
                                   country = object$country)
-
+    
     #Fitting with the genetic algorithm
     gen_model <- GA::de(fit_funcs[[3]], lower = fit_funcs[[1]][[1]], upper = fit_funcs[[1]][[2]], seed=object$seed, maxiter = maxiter, ...)
 
@@ -265,7 +270,9 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
     names(gammaTrans) <- object$saturated
     
     if(!is.null(object$seed)){set.seed(object$seed)}
-    object$glm <- fit_funcs[[3]](gen_model@solution, model=TRUE, seed=object$seed)
+    glmlist <- fit_funcs[[3]](gen_model@solution, model=TRUE, seed=object$seed)
+    object$glm <- glmlist[[1]]
+    object$mod_df <- glmlist[[2]]
     object$fitness <- fit_funcs[[3]]
     
     coef_frame <- data.frame(

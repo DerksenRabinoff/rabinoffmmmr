@@ -17,6 +17,8 @@ saturation_hill_trans <- function(input, alpha, gammatrans){
     input^alpha / (input^alpha + gammatrans^alpha)
 }
 
+## inverse: input = ((sat*gammatrans^alpha)/(1-sat))^(1/alpha)
+
 #' Saturation Hill Derivative
 #'
 #' Like saturation_hill_trans, but the derivative of the curve
@@ -110,27 +112,30 @@ apply_media_transforms <- function(data, hyps, compute_gammatrans = TRUE){
         stop("gammaTrans is missing from 'hyps'. Please supply it or set 'compute_gammatrans' to TRUE.")
     }
 
-    check_presence(hyps$predictor, names(data))
+    check_presence(hyps$predictors, names(data))
 
-    saturated <- hyps$predictor[!is.na(hyps$gammas)]
-    adstocked <- hyps$predictor[!is.na(hyps$thetas)]
-    
+    saturated <- hyps$predictors[!is.na(hyps$gammas)]
+    adstocked <- hyps$predictors[!is.na(hyps$thetas)]
+
     ## Apply adstocking
     datmod %<>% dplyr::mutate(
                            dplyr::across(
                                       .cols= adstocked,
-                                      .fns= ~ adstock_geometric(.x, hyps$thetas[dplyr::cur_column()])))
+                                      .fns= ~ adstock_geometric(.x, hyps$thetas[which(hyps$predictors == dplyr::cur_column())])))
+
     ## Calculate gammaTrans
     if(compute_gammatrans){
-        hyps <- dplyr::mutate(
+        hyps %<>% dplyr::mutate(
                            gammaTrans =
                                unlist(
                                    purrr::map(
-                                              saturated,
+                                              hyps$predictors,
                                               function(x){
-                                                  gamma_to_gammatrans(
-                                                      datmod[[x]],
-                                                      gammas[[x]], NA)})))
+                                                  if(x %in% saturated){
+                                                      gamma_to_gammatrans(
+                                                          datmod[[x]],
+                                                          hyps$gammas[[which(hyps$predictors == x)]], NA)}
+                                                  else{NA}})))
     }
     ## Apply saturation effects
     datmod %<>% dplyr::mutate(
@@ -139,8 +144,8 @@ apply_media_transforms <- function(data, hyps, compute_gammatrans = TRUE){
                                       .fns= function(x){
                                           saturation_hill_trans(
                                               x,
-                                              hyps$alphas[dplyr::cur_column()],
-                                              hyps$gammaTrans[dplyr::cur_column()])}))
+                                              hyps$alphas[which(hyps$predictors == dplyr::cur_column())],
+                                              hyps$gammaTrans[which(hyps$predictors == dplyr::cur_column())])}))
     return(datmod)
     }
 
@@ -174,7 +179,7 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     original_predictors <- predictors
 
     names(data)[which(names(data) == dep_col)] <- "y"
-
+    
     names(data)[which(names(data) == date_col)] <- "ds"
 
     data <- janitor::clean_names(data)
@@ -216,6 +221,6 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
 
     names(data) <- original_names
 
-    return(dplyr::left_join(data, prph))
+    return(dplyr::left_join(data, prph, by = date_col))
     
 }
