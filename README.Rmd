@@ -25,18 +25,57 @@ The goal of rabinoffmmmr is to provide an interface for building and employing m
 You can install the development version of rabinoffmmmr like so:
 
 ``` r
-devtools::install_github("DerksenRabinoff/rabinoffmmmr")
+## NOT RUN
+#devtools::install_github("DerksenRabinoff/rabinoffmmmr")
 ```
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+Attaching rabinoffmmmr and loading data
 
-```{r example}
+```{r setup, echo = FALSE}
 library(rabinoffmmmr)
-## basic example code
+data <- readr::read_csv("data/ad_spend_sample_data.csv")
 ```
 
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
+The mmm needs to know the dependent variable, the date variable, and which channels need diminishing returns and adstocking calculated.
 
-You can also embed plots, for example:
+```{r set up variables}
+## The data has the following columns
+dependent <- "Sales"
+date <- "Week Starting"
+
+## Let's suppose the following are subject to diminishing returns effects
+saturation_vars <- c("TV Spend", "Radio Spend", "Online Video Spend", "Social Media Spend")
+
+## Let's suppose the following are subject to adstocking effects (retention in consumer memory)
+adstocking_vars <- c("TV Spend", "Radio Spend", "Social Media Spend", "Search Ads Spend", "Direct Mail Spend")
+
+## The predictors will include all variables other than the date and dependent variable
+predictor_vars <- setdiff(names(data), c(dependent, date))
+
+## Make sure the date variable is of type "Date" and that every row has a date
+data[[date]] <- lubridate::as_date(data[[date]], format = "%B %d, %Y")
+data %<>% dplyr::filter(!is.na(`Week Starting`))
+data %>% knitr::kable()
+```
+ 
+Set up an mmmr model
+```{r model}
+## Use the variables above to make an mmmr model. The remainder of the variables will use default values
+model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocked = adstocking_vars, dep_col = dependent, date_col = date)
+```
+ 
+Train the model
+```{r training}
+start_time <- Sys.time()
+model_fit <- fit.mmmr(object = model, data = data, silent = TRUE, maxiter = 1)
+print(glue::glue("Time elapsed: {Sys.time() - start_time}"))
+``` 
+
+Parameters and coefficients of the model:
+```{r results}
+## "complete" means include coefs that are 0. "params" means include the alpha, gamma, and theta parameters of the fit.
+model_results <- coef(model_fit, complete=TRUE, params = TRUE)
+model_results %>% knitr::kable()
+```

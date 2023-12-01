@@ -4,7 +4,7 @@
 \alias{fit.mmmr}
 \title{fit.mmmr}
 \usage{
-fit.mmmr(object, data, maxiter = 10, ...)
+\method{fit}{mmmr}(object, data, maxiter = 10, ...)
 }
 \arguments{
 \item{object}{The mmmr object to be used for fitting.}
@@ -13,7 +13,7 @@ fit.mmmr(object, data, maxiter = 10, ...)
 
 \item{maxiter}{Maximum number of iterations for the genetic algorithm. Passed to GA::de}
 
-\item{...}{Other argument passed to GA::de}
+\item{...}{Other argument passed to GA::de. The ... argument to GA::de are passed to the fitness function, which then gets passed to the glmnet::cv.glmnet function.}
 }
 \value{
 An S3 object of type mmmr_fit

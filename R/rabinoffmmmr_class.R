@@ -72,13 +72,13 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
     ## Instantiated a prophet model.
     prph <- prophet::prophet(daily.seasonality = FALSE, weekly.seasonality = FALSE)
 
-    if(!is.null(country)){
-        prph$country_holidays <- country
-    }
-
     ## Predictors added as regressors in prophet
     for(predictor in predictors){
-        invisible(prph <- prophet::add_regressor(prph, predictor))
+        prph <- prophet::add_regressor(prph, predictor)
+    }
+
+    if(!is.null(country)){
+        prph$country_holidays <- country
     }
 
     ## Restoring original predictor names
@@ -150,6 +150,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
 
         ## Fitting prophet and extracting seasonality, trend, and holiday components
         datmod %<>% prophetize_df(dep_col, date_col, predictors = predictors, country = country, prph = prph)
+
         predictors <- c(predictors, "yearly", "trend", "holidays")
         ## Setting up ridge regression fit for the chosen alpha, gamma, and theta parameters
         omits <- date_col
@@ -227,11 +228,6 @@ mmmr <- function(predictors, saturated, adstocked, dep_col, date_col, alphas_low
 #' @export
 fit.mmmr <- function(object, data, maxiter = 10, ...){
 
-    #If a country code is used we need to attach prophet::generated_holidays
-    if(!is.null(object$country) && !is.na(object$country)){
-        generated_holidays <- prophet::generated_holidays
-    }
-
     #Getting inputs for GA::de. 
     fit_funcs <- mmm_fitness_gen (data,
                                   object$dep_col,
@@ -246,7 +242,7 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
                                   thetas_high = object$thetas_high,
                                   seed = object$seed,
                                   country = object$country)
-    
+
     #Fitting with the genetic algorithm
     gen_model <- GA::de(fit_funcs[[3]], lower = fit_funcs[[1]][[1]], upper = fit_funcs[[1]][[2]], seed=object$seed, maxiter = maxiter, ...)
 

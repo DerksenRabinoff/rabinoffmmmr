@@ -188,7 +188,7 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     names(toreplace) <- setdiff(names(data), "ds")
     data %<>% tidyr::replace_na(toreplace)
     rm(toreplace)
-
+    
     if(is.null(predictors)){
         predictors <- setdiff(names(data), c("y", "ds"))
     } else{
@@ -200,23 +200,25 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
                              daily.seasonality = daily.seasonality,
                              weekly.seasonality = weekly.seasonality, ...)       
         
-        if(!is.null(country)){
-            prph$country_holidays <- country
-        }
-
         ## Predictors added as regressors in prophet
         for(predictor in predictors){
             invisible(prph <- prophet::add_regressor(prph, predictor))
+        }
+        if(!is.null(country)){
+            prph$country_holidays <- country
         }
     }
 
     dat_fit <- dplyr::select(data, dplyr::any_of(c("ds", "y", predictors)))
 
+    ## Bad practice, but "generated holidays" is not found in the search path on the call to "fit"
+    assign("generated_holidays", prophet::generated_holidays, envir = .GlobalEnv)
+
     prph %<>% prophet::fit.prophet(dat_fit) %>%
         stats::predict(dat_fit) %>%
         dplyr::select(dplyr::any_of(c("ds", "yearly", "trend", "holidays"))) %>%
         dplyr::mutate(ds = lubridate::as_date(ds))
-    
+
     names(prph)[1] <- date_col
 
     names(data) <- original_names
