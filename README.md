@@ -52,14 +52,14 @@ head(data) %>% knitr::kable()
 
 
 
-| Traffic| (NET) Local TV Spend| Local TV Impressions| OTT Spend (NET)| OTT Impressions| (NET) Local Cable Spend| Local Cable IMPS| (NET) Local Radio Spend| Local Radio GRPs| Online Video Spend| Online Video Impressions| Online Audio Spend| Online Audio Impressions|Pandora Video Spend |Pandora Video Impressions | Online Display Spend| Online Display Impressions| Social Media Spend| Social Media Impressions| Search Spend| Search Impressions| Shopping (LIA) Spend| Shopping (LIA) Impressions| Print Insert Spend| Print Insert Inserts| Direct Mail Spend| Direct Mail Quantity|Week Starting | Bf| new_years| memorial_day| Pres| presidents_day_sh| xmas| adverse_event| Jul4| labor day|    ...38|
-|-------:|--------------------:|--------------------:|---------------:|---------------:|-----------------------:|----------------:|-----------------------:|----------------:|------------------:|------------------------:|------------------:|------------------------:|:-------------------|:-------------------------|--------------------:|--------------------------:|------------------:|------------------------:|------------:|------------------:|--------------------:|--------------------------:|------------------:|--------------------:|-----------------:|--------------------:|:-------------|--:|---------:|------------:|----:|-----------------:|----:|-------------:|----:|---------:|--------:|
-|   469.0|               4270.4|               102666|          354.43|           20030|                       0|                0|                      NA|               NA|                 69|                     6242|                  0|                        0|NA                  |NA                        |                    3|                       3986|             239.72|                    41308|          290|               6022|                   NA|                         NA|                  0|                    0|                75|                   97|2018-12-31    |  0|         1|            0|    0|                 0|    0|             0|    0|         0| 310.8496|
-|   324.0|               3299.7|               131729|          386.46|           21840|                       0|                0|                      NA|               NA|                 69|                     7762|                  0|                        0|NA                  |NA                        |                    0|                          0|             239.72|                    39738|          287|               5401|                   NA|                         NA|                  0|                    0|              1792|                 3128|2019-01-07    |  0|         0|            0|    0|                 0|    0|             0|    0|         0|       NA|
-|   321.5|               4418.3|               125033|          386.60|           21848|                       0|                0|                      NA|               NA|                 70|                     8007|                  0|                        0|NA                  |NA                        |                    0|                          0|             239.71|                    17678|          288|               4265|                   NA|                         NA|                  0|                    0|              2235|                 3797|2019-01-14    |  0|         0|            0|    0|                 0|    0|             0|    0|         0|       NA|
-|   355.0|                   NA|                   NA|            0.00|               0|                       0|                0|                      NA|               NA|                 68|                     8038|                  0|                        0|NA                  |NA                        |                    0|                          0|             239.72|                    20800|          268|               4329|                   NA|                         NA|                  0|                    0|              3547|                 6731|2019-01-21    |  0|         0|            0|    0|                 0|    0|             0|    0|         0|       NA|
-|   348.0|               4800.8|               123915|          386.53|           21844|                       0|                0|                 2022.25|              102|                 71|                     8817|                  0|                        0|NA                  |NA                        |                    0|                          0|             239.72|                    21274|          304|               4571|                   NA|                         NA|                  0|                    0|              1303|                 2332|2019-01-28    |  0|         0|            0|    0|                 0|    0|             0|    0|         0|       NA|
-|   372.5|               3309.9|                85192|          354.47|           20032|                       0|                0|                      NA|               NA|                 77|                     8061|                  0|                        0|NA                  |NA                        |                    0|                          0|             239.72|                    41150|          323|               4493|                   NA|                         NA|               2017|                24665|               181|                  241|2019-02-04    |  0|         0|            0|    0|                 0|    0|             0|    0|         0|       NA|
+|Week Starting |     Sales| TV Spend| Radio Spend| Online Video Spend| Social Media Spend| Search Ads Spend| Direct Mail Spend| black friday sale| xmas| adverse event|
+|:-------------|---------:|--------:|-----------:|------------------:|------------------:|----------------:|-----------------:|-----------------:|----:|-------------:|
+|2019-01-28    | 152950.29|     5678|        2394|                 70|                276|              246|              1484|                 0|    0|             0|
+|2019-02-04    |  76461.56|     2716|           0|                 94|                236|              376|               224|                 0|    0|             0|
+|2019-02-11    | 183703.37|     5166|        2278|                179|                438|              439|               802|                 0|    0|             0|
+|2019-02-18    | 110030.79|     4869|           0|                139|                276|              450|               572|                 0|    0|             0|
+|2019-02-25    | 194915.23|     4097|        2471|                 82|                325|              308|              1852|                 0|    0|             0|
+|2019-03-04    | 119382.20|        0|           0|                 66|                264|              242|               550|                 0|    0|             0|
 
 
  
@@ -68,7 +68,6 @@ Set up an mmmr model
 ```r
 ## Use the variables above to make an mmmr model. The remainder of the variables will use default values
 model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocked = adstocking_vars, dep_col = dependent, date_col = date)
-#> Error in check_presence(saturated, predictors, namecheck = FALSE): <chr> contains values not listed in <chr>
 ```
  
 Train the model
@@ -84,9 +83,7 @@ Parameters and coefficients of the model:
 ```r
 ## "complete" means include coefs that are 0. "params" means include the alpha, gamma, and theta parameters of the fit.
 model_results <- coef(model_fit, complete=TRUE, params = TRUE)
-#> Error in coef(model_fit, complete = TRUE, params = TRUE): object 'model_fit' not found
 model_results %>% knitr::kable()
-#> Error in knitr::kable(.): object 'model_results' not found
 ```
 
 Predictions from the model. If adstocking is high (high thetas) consider cutting the first few rows. Adstocking values depend on previous rows.
@@ -106,8 +103,6 @@ new_data[[date]] <- lubridate::as_date(new_data[[date]], format = "%B %d, %Y")
 new_data %<>% dplyr::filter(!is.na(`Week Starting`))
 
 predictions <- predict.mmmr_fit(model_fit, new_data)
-#> Error in which(names(prphdat) == object$dep_col): object 'model_fit' not found
 
 print(predictions)
-#> Error in print(predictions): object 'predictions' not found
 ```
