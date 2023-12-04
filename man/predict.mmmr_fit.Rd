@@ -7,7 +7,7 @@
 \method{predict}{mmmr_fit}(
   object,
   newdata = NULL,
-  prophetize = FALSE,
+  new_prophet = FALSE,
   compute_gammatrans = FALSE,
   ...
 )
@@ -17,7 +17,7 @@
 
 \item{newdata}{A dataframe to get new predictions from.}
 
-\item{prophetize}{If set to TRUE, trend, holidays, and seasonality columns will be added to the data}
+\item{new_prophet}{If set to TRUE, trend, holidays, and seasonality columns will re-computed and added to the data. If FALSE, then the prophet model from the fit will be used to add trend, holidays, and seasonality.}
 
 \item{compute_gammatrans}{If set to TRUE, new values of gammaTrans will be computed with the new data. If false, gammaTrans computed with the training data will be used.}
 

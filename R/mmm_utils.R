@@ -108,7 +108,7 @@ apply_media_transforms <- function(data, hyps, compute_gammatrans = TRUE){
         stop("Cannot apply media transforms. Alphas and Gammas mismatch")
     }
 
-    if(!compute_gammatrans && ! "gammaTrans" %in% hyps$predictors){
+    if(!compute_gammatrans && ! "gammaTrans" %in% names(hyps)){
         stop("gammaTrans is missing from 'hyps'. Please supply it or set 'compute_gammatrans' to TRUE.")
     }
 
@@ -214,15 +214,21 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     ## Bad practice, but "generated holidays" is not found in the search path on the call to "fit"
     assign("generated_holidays", prophet::generated_holidays, envir = .GlobalEnv)
 
-    prph %<>% prophet::fit.prophet(dat_fit) %>%
+    prph <- prophet::fit.prophet(prph, dat_fit)
+    
+    prphdat <- prph %>%
         stats::predict(dat_fit) %>%
         dplyr::select(dplyr::any_of(c("ds", "yearly", "trend", "holidays"))) %>%
         dplyr::mutate(ds = lubridate::as_date(ds))
 
-    names(prph)[1] <- date_col
+    names(prphdat)[1] <- date_col
 
     names(data) <- original_names
 
-    return(dplyr::left_join(data, prph, by = date_col))
+    returndat <- dplyr::left_join(data, prphdat, by = date_col)
+
+    attr(returndat, "prph") <- prph
+
+    return(returndat)
     
 }

@@ -1,8 +1,3 @@
----
-output: github_document
----
-
-<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -34,10 +29,10 @@ You can install the development version of rabinoffmmmr like so:
 Attaching rabinoffmmmr and loading data
 
 ```{r setup, eval = FALSE}
-library(rabinoffmmmr)
+##library(rabinoffmmmr)
 data <- readr::read_csv("data/ad_spend_sample_data.csv")
 ```
-
+ 
 The mmm needs to know the dependent variable, the date variable, and which channels need diminishing returns and adstocking calculated.
 
 ```{r set up variables}
@@ -55,7 +50,7 @@ adstocking_vars <- c("TV Spend", "Radio Spend", "Social Media Spend", "Search Ad
 predictor_vars <- setdiff(names(data), c(dependent, date))
 
 ## Make sure the date variable is of type "Date" and that every row has a date
-data[[date]] <- lubridate::as_date(data[[date]], format = "%B %d, %Y")
+data[[date]] <- lubridate::as_date(data[[date]])
 data %<>% dplyr::filter(!is.na(`Week Starting`))
 head(data) %>% knitr::kable()
 ```
@@ -70,7 +65,7 @@ Train the model
 ```{r training, eval = FALSE}
 start_time <- Sys.time()
 model_fit <- fit.mmmr(object = model, data = data, silent = TRUE, maxiter = 1)
-print(glue::glue("Time elapsed: {Sys.time() - start_time}"))
+print(Sys.time() - start_time)
 ``` 
 
 Parameters and coefficients of the model:
@@ -78,4 +73,16 @@ Parameters and coefficients of the model:
 ## "complete" means include coefs that are 0. "params" means include the alpha, gamma, and theta parameters of the fit.
 model_results <- coef(model_fit, complete=TRUE, params = TRUE)
 model_results %>% knitr::kable()
+```
+
+Predictions from the model. If adstocking is high (high thetas) consider cutting the first few rows. Adstocking values depend on previous rows.
+```{r predict}
+## Load new data
+new_data <- readr::read_csv("data/ad_spend_plan_for_predict.csv")
+new_data[[date]] <- lubridate::as_date(new_data[[date]], format = "%B %d, %Y")
+new_data %<>% dplyr::filter(!is.na(`Week Starting`))
+
+predictions <- predict.mmmr_fit(model_fit, new_data)
+
+print(predictions)
 ```
