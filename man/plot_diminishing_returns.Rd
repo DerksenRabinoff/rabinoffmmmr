@@ -4,7 +4,14 @@
 \alias{plot_diminishing_returns}
 \title{Plot Diminishing Returns Curve}
 \usage{
-plot_diminishing_returns(object, channel, rate = FALSE, xy_only = FALSE, ...)
+plot_diminishing_returns(
+  object,
+  channel,
+  rate = FALSE,
+  xy_only = FALSE,
+  inflection_point = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{A fitted mmmr model}
@@ -14,6 +21,8 @@ plot_diminishing_returns(object, channel, rate = FALSE, xy_only = FALSE, ...)
 \item{rate}{If TRUE, the y axis will be the return on the next dollar spent instead of the return on the current spend level.}
 
 \item{xy_only}{If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.}
+
+\item{inflection_point}{If TRUE, the plot will be annotated at the inflection point.}
 
 \item{...}{Arguments passed to a theme object for the plot}
 }
