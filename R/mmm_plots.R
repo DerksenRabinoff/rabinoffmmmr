@@ -10,6 +10,7 @@
 #' @param channel The name of the media channel to plot
 #' @param rate If TRUE, the y axis will be the return on the next dollar spent instead of the return on the current spend level.
 #' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' @param ... Arguments passed to a theme object for the plot
 #' 
 #' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
 #' 
@@ -70,6 +71,7 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
 #' @param object A fitted mmmr model
 #' @param channel The name of the media channel to plot
 #' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' @param ... Arguments passed to a theme object for the plot
 #' 
 #' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
 #' 

@@ -1,6 +1,6 @@
 
 
-
+  
 # rabinoffmmmr
 
 <!-- badges: start -->
@@ -19,12 +19,11 @@ You can install the development version of rabinoffmmmr like so:
 
 ## Example
 
-Attaching rabinoffmmmr and loading data
+Attaching rabinoffmmmr. Sample training data will be loaded called `historical_ad_spends`. Sample data to predict on will be loaded called `spend_plan`.
 
 
 ```r
-##library(rabinoffmmmr)
-data <- readr::read_csv("data/ad_spend_sample_data.csv")
+library(rabinoffmmmr)
 ```
  
 The mmm needs to know the dependent variable, the date variable, and which channels need diminishing returns and adstocking calculated.
@@ -42,12 +41,12 @@ saturation_vars <- c("TV Spend", "Radio Spend", "Online Video Spend", "Social Me
 adstocking_vars <- c("TV Spend", "Radio Spend", "Social Media Spend", "Search Ads Spend", "Direct Mail Spend")
 
 ## The predictors will include all variables other than the date and dependent variable
-predictor_vars <- setdiff(names(data), c(dependent, date))
+predictor_vars <- setdiff(names(historical_ad_spends), c(dependent, date))
 
 ## Make sure the date variable is of type "Date" and that every row has a date
-data[[date]] <- lubridate::as_date(data[[date]])
-data %<>% dplyr::filter(!is.na(`Week Starting`))
-head(data) %>% knitr::kable()
+historical_ad_spends[[date]] <- lubridate::as_date(historical_ad_spends[[date]])
+historical_ad_spends %<>% dplyr::filter(!is.na(`Week Starting`))
+head(historical_ad_spends) %>% knitr::kable()
 ```
 
 
@@ -74,7 +73,7 @@ Train the model
 
 ```r
 start_time <- Sys.time()
-model_fit <- fit.mmmr(object = model, data = data, silent = TRUE, maxiter = 1)
+model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE, maxiter = 1)
 print(Sys.time() - start_time)
 ```
 
@@ -86,23 +85,51 @@ model_results <- coef(model_fit, complete=TRUE, params = TRUE)
 model_results %>% knitr::kable()
 ```
 
+
+
+|predictors         |          coef|    alphas|    gammas|    thetas| gammaTrans|
+|:------------------|-------------:|---------:|---------:|---------:|----------:|
+|(Intercept)        | -5.816438e+04|        NA|        NA|        NA|         NA|
+|TV Spend           |  7.469329e+04| 0.8185835| 0.9023566| 0.0193691|  5444.8197|
+|Radio Spend        |  9.149510e+04| 1.9994234| 0.3002393| 0.2338067|  1358.8829|
+|Online Video Spend |  0.000000e+00| 2.3311007| 0.3492010|        NA|   436.5013|
+|Social Media Spend |  5.260751e+04| 1.4089773| 0.6101861| 0.0035023|  1424.7845|
+|Search Ads Spend   |  1.369697e+01|        NA|        NA| 0.2898560|         NA|
+|Direct Mail Spend  |  6.936803e+00|        NA|        NA| 0.4631322|         NA|
+|black friday sale  |  2.607113e+04|        NA|        NA|        NA|         NA|
+|xmas               | -5.423722e+04|        NA|        NA|        NA|         NA|
+|adverse event      | -9.711974e+04|        NA|        NA|        NA|         NA|
+|yearly             |  8.003503e-01|        NA|        NA|        NA|         NA|
+|trend              |  1.001315e+00|        NA|        NA|        NA|         NA|
+|holidays           |  9.075114e-01|        NA|        NA|        NA|         NA|
+
+
+
 Predictions from the model. If adstocking is high (high thetas) consider cutting the first few rows. Adstocking values depend on previous rows.
 
 ```r
 ## Load new data
-new_data <- readr::read_csv("data/ad_spend_plan_for_predict.csv")
-#> Rows: 24 Columns: 11
-#> ── Column specification ───────────────────────────────────────────────────────────────────────────────
-#> Delimiter: ","
-#> chr  (1): Week Starting
-#> dbl (10): Traffic, TV Spend, Radio Spend, Online Video Spend, Social Media Spend, Search Ads Spend,...
-#> 
-#> ℹ Use `spec()` to retrieve the full column specification for this data.
-#> ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-new_data[[date]] <- lubridate::as_date(new_data[[date]], format = "%B %d, %Y")
-new_data %<>% dplyr::filter(!is.na(`Week Starting`))
 
-predictions <- predict.mmmr_fit(model_fit, new_data)
+spend_plan[[date]] <- lubridate::as_date(spend_plan[[date]], format = "%B %d, %Y")
+spend_plan %<>% dplyr::filter(!is.na(`Week Starting`))
+
+predictions <- predict.mmmr_fit(model_fit, spend_plan)
+#> Joining with `by = join_by(`Week Starting`)`
 
 print(predictions)
+#> # A tibble: 24 × 1
+#> # Rowwise: 
+#>      .pred
+#>      <dbl>
+#>  1  78571.
+#>  2 144276.
+#>  3  75884.
+#>  4  58326.
+#>  5 136961.
+#>  6 110899.
+#>  7   4295.
+#>  8 174750.
+#>  9  93456.
+#> 10  69345.
+#> # ℹ 14 more rows
 ```

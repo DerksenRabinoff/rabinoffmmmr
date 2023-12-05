@@ -26,11 +26,10 @@ You can install the development version of rabinoffmmmr like so:
 
 ## Example
 
-Attaching rabinoffmmmr and loading data
+Attaching rabinoffmmmr. Sample training data will be loaded called `historical_ad_spends`. Sample data to predict on will be loaded called `spend_plan`.
 
 ```{r setup, eval = FALSE}
-##library(rabinoffmmmr)
-data <- readr::read_csv("data/ad_spend_sample_data.csv")
+library(rabinoffmmmr)
 ```
  
 The mmm needs to know the dependent variable, the date variable, and which channels need diminishing returns and adstocking calculated.
@@ -47,12 +46,12 @@ saturation_vars <- c("TV Spend", "Radio Spend", "Online Video Spend", "Social Me
 adstocking_vars <- c("TV Spend", "Radio Spend", "Social Media Spend", "Search Ads Spend", "Direct Mail Spend")
 
 ## The predictors will include all variables other than the date and dependent variable
-predictor_vars <- setdiff(names(data), c(dependent, date))
+predictor_vars <- setdiff(names(historical_ad_spends), c(dependent, date))
 
 ## Make sure the date variable is of type "Date" and that every row has a date
-data[[date]] <- lubridate::as_date(data[[date]])
-data %<>% dplyr::filter(!is.na(`Week Starting`))
-head(data) %>% knitr::kable()
+historical_ad_spends[[date]] <- lubridate::as_date(historical_ad_spends[[date]])
+historical_ad_spends %<>% dplyr::filter(!is.na(`Week Starting`))
+head(historical_ad_spends) %>% knitr::kable()
 ```
  
 Set up an mmmr model
@@ -64,7 +63,7 @@ model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocke
 Train the model
 ```{r training, eval = FALSE}
 start_time <- Sys.time()
-model_fit <- fit.mmmr(object = model, data = data, silent = TRUE, maxiter = 1)
+model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE, maxiter = 1)
 print(Sys.time() - start_time)
 ``` 
 
@@ -78,11 +77,11 @@ model_results %>% knitr::kable()
 Predictions from the model. If adstocking is high (high thetas) consider cutting the first few rows. Adstocking values depend on previous rows.
 ```{r predict}
 ## Load new data
-new_data <- readr::read_csv("data/ad_spend_plan_for_predict.csv")
-new_data[[date]] <- lubridate::as_date(new_data[[date]], format = "%B %d, %Y")
-new_data %<>% dplyr::filter(!is.na(`Week Starting`))
 
-predictions <- predict.mmmr_fit(model_fit, new_data)
+spend_plan[[date]] <- lubridate::as_date(spend_plan[[date]], format = "%B %d, %Y")
+spend_plan %<>% dplyr::filter(!is.na(`Week Starting`))
+
+predictions <- predict.mmmr_fit(model_fit, spend_plan)
 
 print(predictions)
 ```

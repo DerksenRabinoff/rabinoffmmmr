@@ -12,6 +12,7 @@ Imports:
     assertthat,
     dplyr,
     GA,
+    generics,
     ggplot2,
     glmnet,
     glue,
@@ -24,3 +25,6 @@ Imports:
     stats,
     tidyquant,
     tidyr
+Depends: 
+    R (>= 2.10)
+LazyData: true

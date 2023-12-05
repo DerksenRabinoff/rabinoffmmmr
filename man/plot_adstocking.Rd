@@ -12,6 +12,8 @@ plot_adstocking(object, channel, xy_only = FALSE, ...)
 \item{channel}{The name of the media channel to plot}
 
 \item{xy_only}{If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.}
+
+\item{...}{Arguments passed to a theme object for the plot}
 }
 \value{
 If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.

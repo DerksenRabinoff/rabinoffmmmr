@@ -4,3 +4,5 @@
 .*\#.*
 /README.rmd~
 /R/top_level_test.R
+/data/*.ods
+/data/*.xlsx
