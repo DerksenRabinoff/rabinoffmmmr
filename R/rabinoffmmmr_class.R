@@ -345,7 +345,8 @@ predict.mmmr_fit <- function(object, newdata = NULL, new_prophet = FALSE, comput
                                                  predictors == dplyr::cur_column()) %>%
                                       dplyr::pull(coef)})) %>%
         dplyr::rowwise() %>%
-        dplyr::mutate(.pred = sum(dplyr::c_across(dplyr::any_of(predictors))) + intercept)
+        dplyr::mutate(.pred = sum(dplyr::c_across(dplyr::any_of(predictors))) + intercept) %>%
+        dplyr::ungroup()
 
     if(full_table){return(newdata)}
     else{return(dplyr::select(newdata, .pred))}
