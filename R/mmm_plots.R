@@ -18,7 +18,7 @@
 plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FALSE, ...){
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
-        dplyr::filter(predictor == channel)
+        dplyr::filter(predictors == channel)
 
     print(length(hyps$gammaTrans))
     
@@ -27,10 +27,9 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     repeat{
         xs <- seq(from = 0, to = 2*hyps$gammaTrans, length.out = seqlen)
 
-        ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)
-        ys_diff <- ys[2:length(ys)] - ys[1:(length(ys)-1)]
-        
-        lim <- quantile(ys_diff, probs=.1)
+        ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
+        ys_diff <- ys[1:(length(ys)-1)] - ys[2:length(ys)]
+        lim <- quantile(ys_diff, probs=.1, na.rm = TRUE)
         cut <- which(ys_diff < lim)
         if(length(cut) == 0){
             seqlen <- seqlen + 50
@@ -41,23 +40,31 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
 
     xs <- xs[1:cut]
     ys <- ys[1:cut]
-    
-    if(!rate){
-        ys <- saturation_hill_trans(xs, hyps$alphas, hyps$gammaTrans)
-    }
 
+    if(!rate){
+        ys <- saturation_hill_trans(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
+    }
+    plotframe <- data.frame(Media = xs, Return = ys)[2:length(xs),]
     if(rate){
-        plotframe <- data.frame(Media = xs, `Return Rate` = ys)
-        g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = `Return Rate`))
+        names(plotframe) <- c(channel, "Return Rate")
+        plotexp <- substitute(
+                ggplot2::ggplot(plotframe, ggplot2::aes(x = chan, y = `Return Rate`)),
+            list(chan = as.symbol(channel)))
+        g <- eval(plotexp)
+
     } else{
-        plotframe <- data.frame(Media = xs, `Return` = ys)
-        g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = Return))        
+        names(plotframe) <- c(channel, "Return")
+        g <- eval(
+            substitute(
+                ggplot2::ggplot(plotframe, ggplot2::aes(x = chan, y = Return)),
+                list(chan = as.symbol(channel))))
     }
 
     if(xy_only){return(plotframe)}
     
     g <- g +
         ggplot2::geom_line() +
+        ggplot2::labs(title = paste(names(plotframe), collapse = " ")) +
         ggplot2::theme(...)
 
     return(g)
@@ -79,7 +86,7 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
 plot_adstocking <- function(object, channel, xy_only = FALSE, ...){
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
-        dplyr::filter(predictor == channel)
+        dplyr::filter(predictors == channel)
 
     print(length(hyps$gammaTrans))
     
