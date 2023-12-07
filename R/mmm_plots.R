@@ -20,8 +20,6 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
         dplyr::filter(predictors == channel)
-
-    print(length(hyps$gammaTrans))
     
     seqlen <- 200
     
@@ -67,8 +65,6 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
         ggplot2::geom_line() +
         ggplot2::labs(title = paste(names(plotframe), collapse = " ")) +
         ggplot2::theme(...)
-
-    print(hyps$gammaTrans)
     
     if(inflection_point){
         inflect_x <- plotframe[min(abs(xs - hyps$gammaTrans)),]
@@ -90,28 +86,30 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
 #' @param object A fitted mmmr model
 #' @param channel The name of the media channel to plot
 #' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' @param start_value The starting exposure value for the left-most point on the plot.
 #' @param ... Arguments passed to a theme object for the plot
 #' 
 #' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
 #' 
 #' @export
-plot_adstocking <- function(object, channel, xy_only = FALSE, ...){
+plot_adstocking <- function(object, channel, start_value = NULL, xy_only = FALSE, ...){
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
         dplyr::filter(predictors == channel)
-
-    print(length(hyps$gammaTrans))
     
     seqlen <- 10
 
-    xs <- rep(0, times = seqlen)
+    if(is.null(start_value)){start_value <- hyps$gammaTrans}
+    ys <- start_value
 
-    xs[1] <- hyps$gammaTrans
+    for(i in 2:5){
+        ys[i] <- ys[i-1]*hyps$thetas
+        }
 
-    ys <- adstock_geometric(xs, hyps$thetas)
-
-    plotframe <- data.frame(Media = xs, `Effective Exposure` = ys)
-    g <- ggplot2::ggplot(ggplot2::aes(x = Media, y = `Effective Exposure`))        
+    plotframe <- data.frame(`Weeks Out` = 1:5, `Effective Exposure` = ys)
+    names(plotframe) <- c("Weeks Out", "Effective Exposure")
+    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
+        ggplot2::labs(title = paste("Effective Exposure Over Time for", channel, collapse = " ")) 
 
     if(xy_only){return(plotframe)}
     

@@ -38,3 +38,18 @@
 #'    \item{adverse event}{1 if that week includes some known barrier to sales (construction, extreme weather etc.), 0 otherwise}
 #' }
 "spend_plan"
+
+#' Generated Holidays
+#'
+#' The holiday data set from the `prophet` package.
+#'
+#' @format ## `generated_holidays`
+#' A data frame with 4 columns and 46192 rows:
+#' \describe{
+#'    \item{ds}{The date of the holiday}
+#'    \item{holiday}{The name of the holiday}
+#'    \item{country}{The country code of the country in which the holiday is observed}
+#'    \item{year}{The year of the holiday}
+#' }
+#' @source <https://github.com/facebook/prophet/tree/main/R/data-raw>
+"generated_holidays"

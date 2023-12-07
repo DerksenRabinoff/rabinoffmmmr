@@ -211,9 +211,6 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
 
     dat_fit <- dplyr::select(data, dplyr::any_of(c("ds", "y", predictors)))
 
-    ## Bad practice, but "generated holidays" is not found in the search path on the call to "fit"
-    assign("generated_holidays", prophet::generated_holidays, envir = .GlobalEnv)
-
     prph <- prophet::fit.prophet(prph, dat_fit)
     
     prphdat <- prph %>%

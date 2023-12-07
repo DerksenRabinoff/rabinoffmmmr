@@ -4,12 +4,14 @@
 \alias{plot_adstocking}
 \title{Plot Adstocking Curve}
 \usage{
-plot_adstocking(object, channel, xy_only = FALSE, ...)
+plot_adstocking(object, channel, start_value = NULL, xy_only = FALSE, ...)
 }
 \arguments{
 \item{object}{A fitted mmmr model}
 
 \item{channel}{The name of the media channel to plot}
+
+\item{start_value}{The starting exposure value for the left-most point on the plot.}
 
 \item{xy_only}{If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.}
 

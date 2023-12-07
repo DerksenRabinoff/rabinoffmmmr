@@ -61,7 +61,7 @@ model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocke
 ```
  
 Train the model
-```{r training, eval = FALSE}
+```{r training, cache = TRUE}
 start_time <- Sys.time()
 model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE, maxiter = 1)
 print(Sys.time() - start_time)

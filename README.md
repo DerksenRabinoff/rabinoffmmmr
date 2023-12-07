@@ -74,7 +74,12 @@ Train the model
 ```r
 start_time <- Sys.time()
 model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE, maxiter = 1)
+#> DE | iter = 1 | Mean = -3751163296 | Best = -3145151718
+#> Joining with `by = join_by(predictors)`
+#> Model error: 3322851079.52397
+#> Joining with `by = join_by(predictors)`
 print(Sys.time() - start_time)
+#> Time difference of 2.522215 mins
 ```
 
 Parameters and coefficients of the model:
@@ -118,7 +123,6 @@ predictions <- predict.mmmr_fit(model_fit, spend_plan)
 
 print(predictions)
 #> # A tibble: 24 × 1
-#> # Rowwise: 
 #>      .pred
 #>      <dbl>
 #>  1  78571.
