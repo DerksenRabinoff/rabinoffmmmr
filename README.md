@@ -28,6 +28,8 @@ library(rabinoffmmmr)
  
 The mmm needs to know the dependent variable, the date variable, and which channels need diminishing returns and adstocking calculated.
 
+### Model Setup
+
 
 ```r
 ## The data has the following columns
@@ -68,6 +70,8 @@ Set up an mmmr model
 ## Use the variables above to make an mmmr model. The remainder of the variables will use default values
 model <- mmmr(predictors = predictor_vars, saturated = saturation_vars, adstocked = adstocking_vars, dep_col = dependent, date_col = date)
 ```
+ 
+### Model Training And Results
  
 Train the model
 
@@ -136,4 +140,26 @@ print(predictions)
 #>  9  93456.
 #> 10  69345.
 #> # ℹ 14 more rows
+```
+
+You can include the full modified data with the predict method as well. This may be useful if you want to see the return for individual columns. In this table, each column represents the weekly contribution of that predictor to sales.
+```r
+predictions_tbl <- predict.mmmr_fit(model_fit, full_table = TRUE)
+head(predictions_tbl) %>% knitr::kable()
+```
+
+### Visualizations
+
+There are two functions, `plot_diminishing_returns` and `plot_adstocking` that can visualize the return on individual ad channels. `plot_diminishing_returns` presents the return of a channel as exposure varies, and `plot_adstocking` presents how the exposure degrades over time. If you use the parameter `rate=TRUE` on `plot_diminishing_returns`, the y axis shows the return on the next dollar spent as opposed to the total return at a given exposure level. Both functions return a `ggplot2::ggplot` object, and thus are subject to any additional formatting as any `ggplot` object.
+
+```r
+dim_returns_plot <- plot_diminishing_returns(model_fit, "TV Spend")
+dim_returns_rate_plot <- plot_diminishing_returns(model_fit, "TV Spend", rate=TRUE)
+adstock_plot <- plot_adstocking(model_fit, "TV Spend")
+```
+
+We can clean it up a little by adding formatting.
+
+```r
+dim_returns_plot <- dim_returns_plot + tidyquant::theme_tq()
 ```
