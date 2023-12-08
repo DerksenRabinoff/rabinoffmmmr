@@ -1,3 +1,10 @@
+---
+output:
+	rmarkdown: github_document
+		keep_md: true
+		self_contained: true
+---
+
 
 
   
@@ -83,7 +90,7 @@ model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE
 #> Model error: 3322851079.52397
 #> Joining with `by = join_by(predictors)`
 print(Sys.time() - start_time)
-#> Time difference of 2.522215 mins
+#> Time difference of 2.492219 mins
 ```
 
 Parameters and coefficients of the model:
@@ -156,10 +163,18 @@ There are two functions, `plot_diminishing_returns` and `plot_adstocking` that c
 dim_returns_plot <- plot_diminishing_returns(model_fit, "TV Spend")
 dim_returns_rate_plot <- plot_diminishing_returns(model_fit, "TV Spend", rate=TRUE)
 adstock_plot <- plot_adstocking(model_fit, "TV Spend")
+dim_returns_plot
 ```
+![Diminishing returns plot](./man/figures/dim_return_plot.png)
+![Diminishing returns rate plot](./man/figures/dim_return_rate_plot.png)
+![Adstocking plot](./man/figures/adstock_plot.png)
 
 We can clean it up a little by adding formatting.
 
 ```r
 dim_returns_plot <- dim_returns_plot + tidyquant::theme_tq()
+dim_returns_plot
 ```
+![Pretty diminishing returns plot](./man/figures/dim_returns_pretty.png)
+
+
