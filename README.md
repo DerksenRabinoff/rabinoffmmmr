@@ -1,11 +1,3 @@
----
-output:
-	rmarkdown: github_document
-		keep_md: true
-		self_contained: true
----
-
-
 
   
 # rabinoffmmmr
