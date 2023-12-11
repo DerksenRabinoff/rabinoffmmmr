@@ -10,6 +10,8 @@ plot_diminishing_returns(
   rate = FALSE,
   xy_only = FALSE,
   inflection_point = TRUE,
+  x_scale = scales::dollar_format(),
+  y_scale = scales::dollar_format(),
   ...
 )
 }
@@ -24,7 +26,11 @@ plot_diminishing_returns(
 
 \item{inflection_point}{If TRUE, the plot will be annotated at the inflection point.}
 
-\item{...}{Arguments passed to a theme object for the plot}
+\item{x_scale}{A scale function applied to the x-axis labels and the x value of the inflection point}
+
+\item{y_scale}{A scale function applied to the y-axis labels and the y value of the inflection point}
+
+\item{...}{Arguments passed to the text geom with the inflection point}
 }
 \value{
 If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
