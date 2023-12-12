@@ -32,7 +32,7 @@ saturation_hill_trans <- function(input, alpha, gammatrans){
 #' @export
 saturation_hill_trans_deriv <- function(input, alpha, gammatrans){
     num <- input^alpha
-    numder <- (alpha*input)^(alpha - 1)
+    numder <- alpha*(input^(alpha - 1))
     denum <- (input^alpha + gammatrans^alpha)
     denumder <- numder + alpha*(gammatrans^(alpha-1))
     return((numder*denum + num*denumder)/(denum^2))

@@ -218,11 +218,12 @@ mmmr <- function(predictors, saturated, adstocked, dep_col, date_col, alphas_low
 #'
 #' Print basic stats about an mmmr model
 #'
-#' @param object An mmmr object
-#' @return Nothing
+#' @param x An mmmr object
+#' @param ... Not used
+#' @return A character string
 #' 
 #' @export
-print.mmmr <- function(object){
+print.mmmr <- function(x, ...){
     print(paste("Predictors:", paste(object$predictors, collapse = " "), collapse = " "))
     print(paste("Saturated:", paste(object$saturated, collapse = " "), collapse = " "))
     print(paste("Adstocked:", paste(object$adstocked, collapse = " "), collapse = " " ))    
@@ -306,11 +307,12 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
 #'
 #' Print basic stats about a fitted mmmr model
 #'
-#' @param object An mmmr_fit object
-#' @return Nothing
+#' @param x An mmmr_fit object
+#' @param ... Not used
+#' @return A character string
 #' 
 #' @export
-print.mmmr_fit <- function(object){
+print.mmmr_fit <- function(x, ...){
     print("Fitted mmmr model")
     print("Hyperparameters and Coefficients: ")
     print(object$hyps)
