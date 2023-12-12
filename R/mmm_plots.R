@@ -25,27 +25,28 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     
     seqlen <- 200
     
-    repeat{
-        xs <- seq(from = 0, to = 2*hyps$gammaTrans, length.out = seqlen)
+##    repeat{
+        xs <- seq(from = 0, to = 3*hyps$gammaTrans, length.out = seqlen)
+        xs <- c(xs, hyps$gammaTrans)
 
         ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
-        ys_diff <- ys[1:(length(ys)-1)] - ys[2:length(ys)]
-        lim <- quantile(ys_diff, probs=.1, na.rm = TRUE)
-        cut <- which(ys_diff < lim)
-        if(length(cut) == 0){
-            seqlen <- seqlen + 50
-        } else{break}
-    }
+        ## ys_diff <- abs(ys[1:(length(ys)-1)] - ys[2:length(ys)])
 
-    cut <- cut[1]
-
-    xs <- xs[1:cut]
-    ys <- ys[1:cut]
-
+    ##     lim <- quantile(ys_diff, probs=.001, na.rm = TRUE)
+    ##     cut <- which(ys_diff < lim)
+    ##     if(length(cut) == 0){
+    ##         seqlen <- seqlen + 50
+    ##     } else{break}
+    ## }
+    
     if(!rate){
         ys <- saturation_hill_trans(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
     }
+    
     plotframe <- data.frame(Media = xs, Return = ys)[2:length(xs),]
+    
+    if(xy_only){return(plotframe)}
+    
     if(rate){
         names(plotframe) <- c(channel, "Return Rate")
         plotexp <- substitute(
@@ -60,8 +61,6 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
                 ggplot2::ggplot(plotframe, ggplot2::aes(x = chan, y = Return)),
                 list(chan = as.symbol(channel))))
     }
-
-    if(xy_only){return(plotframe)}
     
     g <- g +
         ggplot2::geom_line() +
@@ -79,6 +78,93 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     return(g)
 
 }
+
+#' Plot Diminishing Returns Curves In A Facet Wrap
+#'
+#' Produces a ggplot2 object of a diminishing returns curve for a specific media channel.
+#'
+#' @param object A fitted mmmr model
+#' @param channels The names of the channels to include. If NULL, all relevant channels will be included.
+#' @param rate If TRUE, the y axis will be the return on the next dollar spent instead of the return on the current spend level.
+#' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' @param inflection_point If TRUE, the plot will be annotated at the inflection point.
+#' @param x_scale A scale function applied to the x-axis labels and the x value of the inflection point
+#' @param y_scale A scale function applied to the y-axis labels and the y value of the inflection point
+#' @param nrow,ncol,scale,shrink,drop,dir,strip.position Arguments passed to ggplot2::facep_wrap
+#' @param ... Arguments passed to the text geom with the inflection point
+#' 
+#' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
+#' 
+#' @export
+plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE, xy_only = FALSE, inflection_point = TRUE, x_scale = scales::dollar_format(), y_scale = scales::dollar_format(), nrow = NULL, ncol = NULL, scale = "free", shrink = TRUE, drop = TRUE, dir = "h", strip.position = "top", ...){
+
+    hyps <- coef(object, complete = TRUE, params = TRUE)
+    
+    if(is.null(channels)){
+        channels <- hyps %>%
+            dplyr::filter(!is.na(alphas) & !is.na(gammas) & coef > 0) %>%
+            dplyr::pull(predictors)
+    } else{
+        for(name in channels){
+            check_presence(name, hyps$predictors, namecheck=FALSE)
+        }
+    }
+    
+    hyps %<>% dplyr::filter(predictors %in% channels)
+
+    total_data <- purrr::map(channels,
+                             .f =
+                                 function(chn){
+                                     plot_diminishing_returns(object, chn, rate = rate, xy_only = TRUE, inflection_point = inflection_point, x_scale = x_scale, y_scale = y_scale, ...) %>%
+                                         dplyr::mutate(channels = chn) %>%
+                                         dplyr::mutate(gammaTrans = hyps[which(hyps$predictors == chn), "gammaTrans"])
+                                     })
+
+    total_data %<>% purrr::reduce(.f=rbind)
+    
+    if(xy_only){return(total_data)}
+    
+    if(rate){
+        names(total_data) <- c("Channel Exposure", "Return Rate", "channels", "gammaTrans")
+        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = `Channel Exposure`, y = `Return Rate`))
+    } else{
+        names(total_data) <- c("Channel Exposure", "Return", "channels", "gammaTrans")
+        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = `Channel Exposure`, y = Return))
+    }
+    
+    g <- g +
+        ggplot2::geom_line() +
+        ggplot2::labs(title = paste("Media Channel Return", ifelse(rate, "Rate", ""))) +
+        ggplot2::scale_x_continuous(labels = x_scale) +
+        ggplot2::scale_y_continuous(labels = y_scale) +
+        ggplot2::facet_wrap(facets = vars(channels), nrow = nrow, ncol = ncol, scale = scale, shrink = shrink, drop = drop, dir = dir, strip.position = strip.position)
+    
+    if(inflection_point){
+
+        
+        inflect_x <- total_data %>%
+            dplyr::group_by(channels) %>%
+            dplyr::mutate(GTdiff = abs(`Channel Exposure` - gammaTrans) - min(abs(`Channel Exposure` - gammaTrans))) %>%
+            dplyr::filter(GTdiff == min(GTdiff)) %>%
+            dplyr::ungroup()
+
+        if(rate){
+            inflect_x$lab_text = paste("(",x_scale(inflect_x$`Channel Exposure`),", ", y_scale(inflect_x$`Return Rate`), ")", sep = "")
+        } else{
+            inflect_x$lab_text = paste("(",x_scale(inflect_x$`Channel Exposure`),", ", y_scale(inflect_x$`Return`), ")", sep = "")
+        }
+        
+        g <- g + ggplot2::geom_point(data = inflect_x) +
+            ggplot2::geom_text(data = inflect_x,
+                              ggplot2::aes(label = lab_text), ...)
+        }
+    
+    return(g)
+
+}
+
+
+
 
 #' Plot Adstocking Curve
 #'
@@ -109,12 +195,69 @@ plot_adstocking <- function(object, channel, start_value = NULL, xy_only = FALSE
 
     plotframe <- data.frame(`Weeks Out` = 1:5, `Effective Exposure` = ys)
     names(plotframe) <- c("Weeks Out", "Effective Exposure")
-    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
-        ggplot2::labs(title = paste("Effective Exposure Over Time for", channel, collapse = " ")) 
-
     if(xy_only){return(plotframe)}
     
+    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
+        ggplot2::labs(title = paste("Effective Exposure Over Time for", channel, collapse = " ")) 
+    
     g <- g + ggplot2::geom_line() +
+        ggplot2::theme(...)
+
+    return(g)
+
+}
+
+#' Plot Adstocking Curve In A Facet Wrap
+#'
+#' Produces a ggplot2 object of an adstocking curve for a specific media channel.
+#'
+#' @param object A fitted mmmr model
+#' @param channels The name of the media channels to plot
+#' @param start_values The starting exposure values for the left-most point on the plots.
+#' @param xy_only If TRUE, return a dataframe of the x-y points for the plot. FALSE by default.
+#' @param ... Arguments passed to the ggplot2::facet_wrap function
+#' 
+#' @return If xy_only is false, a ggplot2 object is returned. Otherwise, a dataframe with x-y coordinates is returned.
+#' 
+#' @export
+plot_adstocking_facet <- function(object, channels = NULL, start_values = NULL, xy_only = FALSE, ...){
+
+    if(is.null(channels)){
+        channels <- dplyr::filter(object$hyps, !is.na(thetas) & coef > 0) %>%
+            dplyr::pull(predictors)
+        } else{
+        for(name in channelss){
+            check_presence(name,
+                           dplyr::filter(hyps, !is.na(thetas) & coef > 0)$predictors,
+                           namecheck=FALSE)
+        }
+    }
+    
+    hyps <- coef(object, complete = TRUE, params = TRUE) %>%
+        dplyr::filter(predictors %in% channels)
+
+    if(is.null(start_values)){start_values <- rep(1000, times=length(channels))}
+    if(length(start_values) == 1){start_values <- rep(start_values, times=length(channels))}
+
+    plotframe <- purrr::reduce(
+                      purrr::map(
+                                 1:nrow(hyps),
+                                 function(x){
+                                     name <- channels[x]
+                                     df <- plot_adstocking(object = object, channel = name, start_value = start_values[x], xy_only = TRUE)
+                                     df$channels = name
+                                     df
+                                 }),
+                      .f = rbind)
+    
+    if(xy_only){return(plotframe)}
+    
+    names(plotframe) <- c("Weeks Out", "Effective Exposure", "channels")
+    
+    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
+        ggplot2::labs(title = "Effective Exposure Over Time") +
+        ggplot2::geom_line() +
+        ggplot2::facet_wrap(facets = ggplot2::vars(channels)) +
         ggplot2::theme(...)
 
     return(g)

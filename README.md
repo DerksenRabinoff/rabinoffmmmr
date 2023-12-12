@@ -170,3 +170,14 @@ dim_returns_plot
 ![Pretty diminishing returns plot](./man/figures/dim_returns_pretty.png)
 
 
+We can summarize the results in a faceted plot.
+
+```r
+dim_returns_facet <- plot_diminishing_returns_facet(model_fit, rate = TRUE, ncol = 2, vjust = 0, hjust = 1) + tidyquant::theme_tq()
+adstock_facet <- plot_adstocking_facet(model_fit) + tidyquant::theme_tq()
+dim_returns_facet
+adstock_facet
+```
+
+![Faceted diminishing returns plot](./man/figures/dim_returns_facet.png)
+![Faceted adstocking plot](./man/figures/adstock_facet.png)
