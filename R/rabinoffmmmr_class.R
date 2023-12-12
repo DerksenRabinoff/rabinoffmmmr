@@ -214,6 +214,20 @@ mmmr <- function(predictors, saturated, adstocked, dep_col, date_col, alphas_low
     return(newmod)
 }
 
+#' print.mmmr
+#'
+#' Print basic stats about an mmmr model
+#'
+#' @param object An mmmr object
+#' @return Nothing
+#' 
+#' @export
+print.mmmr <- function(object){
+    print(paste("Predictors:", paste(object$predictors, collapse = " "), collapse = " "))
+    print(paste("Saturated:", paste(object$saturated, collapse = " "), collapse = " "))
+    print(paste("Adstocked:", paste(object$adstocked, collapse = " "), collapse = " " ))    
+}
+
 #' fit.mmmr
 #'
 #' Fits an mmmr model to some data. Returns a `fit_mmmr` model object that contains the parameters and coefficients for the solution. A `fit_mmmr` object may be used with `predict` and `coef`.
@@ -282,9 +296,26 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
             object$glm$glmnet.fit$beta[,object$glm$index[1,1]]
             ))
     invisible(object$hyps <- dplyr::full_join(coef_frame, object$hyps))
-    
+    object$cv_error <- min(object$glm$cvm)
+    object$cv_mean_error <- object$cv_error / nrow(data)
     class(object) <- c("mmmr_fit", class(object))
     return(object)
+}
+
+#' print.mmmr_fit
+#'
+#' Print basic stats about a fitted mmmr model
+#'
+#' @param object An mmmr_fit object
+#' @return Nothing
+#' 
+#' @export
+print.mmmr_fit <- function(object){
+    print("Fitted mmmr model")
+    print("Hyperparameters and Coefficients: ")
+    print(object$hyps)
+    print(glue::glue("Mean Absolute Cross-Validated Error: {object$cv_mean_error}"))
+    print.mmmr(object)
 }
 
 #' predict.mmmr_fit
@@ -347,7 +378,7 @@ predict.mmmr_fit <- function(object, newdata = NULL, new_prophet = FALSE, comput
         dplyr::rowwise() %>%
         dplyr::mutate(.pred = sum(dplyr::c_across(dplyr::any_of(predictors))) + intercept) %>%
         dplyr::ungroup()
-
+    
     if(full_table){return(newdata)}
     else{return(dplyr::select(newdata, .pred))}
     
