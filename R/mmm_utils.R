@@ -14,7 +14,8 @@
 #' 
 #' @export
 saturation_hill_trans <- function(input, alpha, gammatrans){
-    input^alpha / (input^alpha + gammatrans^alpha)
+    ret <- input^alpha / (input^alpha + gammatrans^alpha)
+    return(ret[!is.na(ret)])
 }
 
 ## inverse: input = ((sat*gammatrans^alpha)/(1-sat))^(1/alpha)
@@ -35,7 +36,8 @@ saturation_hill_trans_deriv <- function(input, alpha, gammatrans){
     numder <- alpha*(input^(alpha - 1))
     denum <- (input^alpha + gammatrans^alpha)
     denumder <- numder
-    return((numder*denum - num*denumder)/(denum^2))
+    ret <- (numder*denum - num*denumder)/(denum^2)
+    return(ret[!is.na(ret)])
 }
 
 #' Geometric Adstock
@@ -48,7 +50,6 @@ saturation_hill_trans_deriv <- function(input, alpha, gammatrans){
 #' @return The transformed vector
 #' 
 #' @export
-
 adstock_geometric <- function(input, decay){
     output_vec <- numeric(length(input))
     output_vec[1] <- input[1]
