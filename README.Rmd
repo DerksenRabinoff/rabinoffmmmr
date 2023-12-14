@@ -13,7 +13,32 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of rabinoffmmmr is to provide an interface for building and employing media mix models that more closely resembles building and employing standard statistical and machine learning models. Model parameters will be stored in an initial model spec object of class `mmmr`, which then can be used with `fit`, `predict`, and `coef`. Plotting and reporting functions will be added.
+## About
+
+The goal of rabinoffmmmr is to provide an interface for building and employing media mix models that resembles building and employing standard statistical and machine learning models. Model parameters will be stored in an initial model spec object of class `mmmr`, which then can be used with `fit`, `predict`, and `coef`. 
+
+A media mix model aim to attribute relative success or failure to advertising efforts based on the relative success or failure of the business on or around the time the advertising effort is being employed. In concrete terms, if a business had $100,000 in sales in a given week, and it advetised on TV, Radio, and Social Media, a media mix model will attempt to determine what amount of those sales were attributable to TV, what amount to Radio, and what amount to Social Media.
+
+There are different strategies for constructing a media mix model. The ones employed here closes follow those in Meta's open source [Robyn](https://facebookexperimental.github.io/Robyn/) project, though choices of backend and interface are different. Most notably, this package does not require any python-based backends, and thus does not require `reticulate`. 
+
+## Strategy
+
+With this package, each media channel can be evaluated for success along three parameters:
+
+- Raw effectiveness
+- Rate of diminishing/growing returns (saturation)
+- Staying power over time (adstocking)
+
+The model will decide these by optimizing each channel with the following parameters:
+
+- Coefficient: The scale at which an advertising channel translates to results (e.g. ad spend -> sales)
+- Gamma:       How quickly an advertising channel reaches diminishin returns with more spend (low gamma = quick diminishing returns)
+- Alpha:       How quickly an advertising channel reaches growing returns with more spend (low alpha = returns start out high. High alpha = returns start low, but build up to a certain point).
+- Theta:       How long an ad stays effective over time (high theta = more staying power).
+
+The model will decide these values for each relevant advertising channel, subject to user tweaking. See below for examples.
+
+To capture seasonality and trend effects, we use Meta's [Prophet](https://facebook.github.io/prophet/) package.
 
 ## Installation
 
