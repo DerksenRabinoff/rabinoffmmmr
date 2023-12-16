@@ -56,3 +56,19 @@ test_that("adstock_geometric works", {
 
     expect_true(all(rand_input <= adstock_geometric(rand_input, stats::runif(n=1, min=0, max=1000))))
 })
+
+test_that("prophetize_df works", {
+
+    prophetized <- prophetize_df(historical_ad_spends, dep_col = "Sales", date_col = "Week Starting")
+
+    for(colname in names(historical_ad_spends)){
+        expect_equal(historical_ad_spends[[colname]], prophetized[[colname]])
+    }
+
+    expect_named(prophetized, c(names(historical_ad_spends), "yearly", "trend", "holidays"))
+
+    expect_true(is.numeric(prophetized$yearly))
+    expect_true(is.numeric(prophetized$trend))
+    expect_true(is.numeric(prophetized$holidays))
+    
+})
