@@ -6,3 +6,5 @@
 /R/top_level_test.R
 /data/*.ods
 /data/*.xlsx
+cache*
+README_cache

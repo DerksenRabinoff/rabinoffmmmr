@@ -4,7 +4,7 @@
 \alias{saturation_hill_trans}
 \title{Saturation Hill}
 \usage{
-saturation_hill_trans(input, alpha, gammatrans)
+saturation_hill_trans(input, alpha, gammatrans, na.rm = TRUE)
 }
 \arguments{
 \item{input}{The input vector to be transformed}
@@ -12,6 +12,8 @@ saturation_hill_trans(input, alpha, gammatrans)
 \item{alpha}{The alpha parameter for transformation. This controls the shape of the curve.}
 
 \item{gammatrans}{The gammatrans parameter for transformation. This controls the inflection point of the curve.}
+
+\item{na.rm}{Remove NA values?}
 }
 \value{
 The transformed vector

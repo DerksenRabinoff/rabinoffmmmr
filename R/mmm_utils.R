@@ -9,13 +9,15 @@
 #' @param input The input vector to be transformed
 #' @param alpha The alpha parameter for transformation. This controls the shape of the curve.
 #' @param gammatrans The gammatrans parameter for transformation. This controls the inflection point of the curve.
+#' @param na.rm Remove NA values?
 #'
 #' @return The transformed vector
 #' 
 #' @export
-saturation_hill_trans <- function(input, alpha, gammatrans){
-    ret <- input^alpha / (input^alpha + gammatrans^alpha)
-    return(ret[!is.na(ret)])
+saturation_hill_trans <- function(input, alpha, gammatrans, na.rm = TRUE){
+    ret <- (input^alpha) / (input^alpha + gammatrans^alpha)
+    if(na.rm){return(ret[!is.na(ret)])}
+    return(ret)        
 }
 
 ## inverse: input = ((sat*gammatrans^alpha)/(1-sat))^(1/alpha)
@@ -27,17 +29,19 @@ saturation_hill_trans <- function(input, alpha, gammatrans){
 #' @param input The input vector to be transformed
 #' @param alpha The alpha parameter for transformation. This controls the shape of the curve.
 #' @param gammatrans The gammatrans parameter for transformation. This controls the inflection point of the curve.
+#' @param na.rm Remove NA values?
 #'
 #' @return The transformed vector
 #' 
 #' @export
-saturation_hill_trans_deriv <- function(input, alpha, gammatrans){
+saturation_hill_trans_deriv <- function(input, alpha, gammatrans, na.rm = TRUE){
     num <- input^alpha
     numder <- alpha*(input^(alpha - 1))
-    denum <- (input^alpha + gammatrans^alpha)
+    denum <- (input^alpha) + (gammatrans^alpha)
     denumder <- numder
     ret <- (numder*denum - num*denumder)/(denum^2)
-    return(ret[!is.na(ret)])
+    if(na.rm){return(ret[!is.na(ret)])}
+    return(ret)
 }
 
 #' Geometric Adstock
@@ -217,7 +221,7 @@ prophetize_df <- function(data, dep_col, date_col, predictors = NULL, country = 
     prphdat <- prph %>%
         stats::predict(dat_fit) %>%
         dplyr::select(dplyr::any_of(c("ds", "yearly", "trend", "holidays"))) %>%
-        dplyr::mutate(ds = lubridate::as_date(ds))
+        dplyr::mutate(ds = lubridate::as_date(.data$ds))
 
     names(prphdat)[1] <- date_col
 

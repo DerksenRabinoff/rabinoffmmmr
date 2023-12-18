@@ -107,7 +107,7 @@ model_fit <- fit.mmmr(object = model, data = historical_ad_spends, silent = TRUE
 #> Model error: 3322851079.52397
 #> Joining with `by = join_by(predictors)`
 print(Sys.time() - start_time)
-#> Time difference of 2.511159 mins
+#> Time difference of 2.492219 mins
 ```
 
 Parameters and coefficients of the model:
@@ -189,7 +189,7 @@ dim_returns_plot
 We can clean it up a little by adding formatting. The ellipses in `plot_diminishing_returns` add arguments to the function generating the inflection point.
 
 ```r
-dim_returns_plot <- plot_diminishing_returns(model_fit, "TV Spend", nudge_x = 1300, size = 4) + tidyquant::theme_tq()
+dim_returns_plot <- plot_diminishing_returns(model_fit, "TV Spend", hjust = 1, size = 4) + tidyquant::theme_tq()
 dim_returns_plot
 ```
 ![Pretty diminishing returns plot](./man/figures/dim_returns_pretty.png)

@@ -53,3 +53,28 @@
 #' }
 #' @source <https://github.com/facebook/prophet/tree/main/R/data-raw>
 "generated_holidays"
+
+#' Model Fit
+#'
+#' An example fitted mmmr model
+#'
+#' @format ## `model_fit`
+#' An mmmr_fit object which includes the following fields
+#' \describe{
+#'    \item{predictors}{A character vector of predictor column names}
+#'    \item{saturated}{A character vector of saturated column names}
+#'    \item{adstocked}{A character vector of adstocked column names}
+#'    \item{dep_col}{The name of the dependant column}
+#'    \item{date_col}{The name of the date column}
+#'    \item{seed}{The seed for internal use}
+#'    \item{country}{The country code for prophet use}
+#'    \item{train}{The training data                                        }
+#'    \item{de}{The de object from GA::de}
+#'    \item{hyps}{A dataframe containing the coefficients and solution parameters}
+#'    \item{glm}{A glmnet::cv.glmnet object used to get the coefficients}
+#'    \item{mod_df}{The training data modified with saturated and adstocking effects}
+#'    \item{proph}{The fitten prophet model}
+#'    \item{fitness}{The fitness function used in GA::de}
+#' }
+"model_fit"
+

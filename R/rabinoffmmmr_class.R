@@ -156,7 +156,7 @@ mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alpha
         ## Setting up ridge regression fit for the chosen alpha, gamma, and theta parameters
         omits <- date_col
         lambdas <- 10^seq(-3,-5, by = -.05)
-        datmodcut <- dplyr::filter(datmod, !is.na(trend))
+        datmodcut <- dplyr::filter(datmod, !is.na(.data$trend))
         datmod_matrix <- as.matrix(dplyr::select(datmodcut, dplyr::any_of(setdiff(predictors, omits))))
         ## Lower bounds for the glmnet. We assume non-negative effect from media channels. Holidays, trend, and seasonality can have negative effect.
         lower <- ifelse(setdiff(predictors, omits) %in% c(sat_names, ads_names), 0, -Inf)
@@ -224,9 +224,9 @@ mmmr <- function(predictors, saturated, adstocked, dep_col, date_col, alphas_low
 #' 
 #' @export
 print.mmmr <- function(x, ...){
-    print(paste("Predictors:", paste(object$predictors, collapse = " "), collapse = " "))
-    print(paste("Saturated:", paste(object$saturated, collapse = " "), collapse = " "))
-    print(paste("Adstocked:", paste(object$adstocked, collapse = " "), collapse = " " ))    
+    print(paste("Predictors:", paste(x$predictors, collapse = " "), collapse = " "))
+    print(paste("Saturated:", paste(x$saturated, collapse = " "), collapse = " "))
+    print(paste("Adstocked:", paste(x$adstocked, collapse = " "), collapse = " " ))    
 }
 
 #' fit.mmmr
@@ -270,7 +270,7 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
     ##print(object$hyps)
     gammaTrans <- unlist(purrr::map(object$saturated,
                                     .f=function(x){
-                                        row <- dplyr::filter(object$hyps, predictors == x)
+                                        row <- dplyr::filter(object$hyps, .data$predictors == x)
                                         gamma_to_gammatrans(
                                             data[[x]],
                                             row$gammas,
@@ -315,9 +315,9 @@ fit.mmmr <- function(object, data, maxiter = 10, ...){
 print.mmmr_fit <- function(x, ...){
     print("Fitted mmmr model")
     print("Hyperparameters and Coefficients: ")
-    print(object$hyps)
+    print(x$hyps)
     print(glue::glue("Mean Absolute Cross-Validated Error: {object$cv_mean_error}"))
-    print.mmmr(object)
+    print.mmmr(x)
 }
 
 #' predict.mmmr_fit
@@ -354,7 +354,7 @@ predict.mmmr_fit <- function(object, newdata = NULL, new_prophet = FALSE, comput
 
         prphdat <- stats::predict(object$proph, prphdat) %>%
             dplyr::select(dplyr::any_of(c("ds", "yearly", "trend", "holidays"))) %>%
-            dplyr::mutate(ds = lubridate::as_date(ds))
+            dplyr::mutate(ds = lubridate::as_date(.data$ds))
 
         names(prphdat)[1] <- date_col
         newdata %<>% dplyr::left_join(prphdat)
@@ -382,7 +382,7 @@ predict.mmmr_fit <- function(object, newdata = NULL, new_prophet = FALSE, comput
         dplyr::ungroup()
     
     if(full_table){return(newdata)}
-    else{return(dplyr::select(newdata, .pred))}
+    else{return(dplyr::select(newdata, dplyr::any_of(".pred")))}
     
     }
 

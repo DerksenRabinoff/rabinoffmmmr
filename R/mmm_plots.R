@@ -21,41 +21,37 @@
 plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FALSE, inflection_point = TRUE, x_scale = scales::dollar_format(), y_scale = scales::dollar_format(), ...){
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
-        dplyr::filter(predictors == channel)
+        dplyr::filter(.data$predictors == channel)
     
     seqlen <- 200
     
-##    repeat{
-        xs <- seq(from = 0, to = 3*hyps$gammaTrans, length.out = seqlen)
-        xs <- c(xs, hyps$gammaTrans)
+    xs <- seq(from = 0, to = 3*hyps$gammaTrans, length.out = seqlen)
+    xs <- sort(c(xs, hyps$gammaTrans))    
 
-        ys <- saturation_hill_trans_deriv(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
-        ## ys_diff <- abs(ys[1:(length(ys)-1)] - ys[2:length(ys)])
+    ys <- saturation_hill_trans(input=xs, alpha=hyps$alphas, gammatrans=hyps$gammaTrans, na.rm = FALSE)*hyps$coef
 
-    ##     lim <- quantile(ys_diff, probs=.001, na.rm = TRUE)
-    ##     cut <- which(ys_diff < lim)
-    ##     if(length(cut) == 0){
-    ##         seqlen <- seqlen + 50
-    ##     } else{break}
-    ## }
+    yrs <- saturation_hill_trans_deriv(input=xs, alpha=hyps$alphas, gammatrans=hyps$gammaTrans, na.rm = FALSE)*hyps$coef
+
+    inflect_y <- max(yrs[2:length(yrs)])
+    inflect_x <- which(yrs == inflect_y)
+    inflect <- rep(FALSE, times = length(yrs))
+    inflect[inflect_x] <- TRUE
     
-    if(!rate){
-        ys <- saturation_hill_trans(xs, hyps$alphas, hyps$gammaTrans)*hyps$coef
-    }
-    
-    plotframe <- data.frame(Media = xs, Return = ys)[2:length(xs),]
-    
-    if(xy_only){return(plotframe)}
+    plotframe <- data.frame(Media = xs, Return = ys, `Return Rate` = yrs, `Inflection Point` = inflect)[2:length(xs),]
     
     if(rate){
-        names(plotframe) <- c(channel, "Return Rate")
+        plotframe <- plotframe[,-2]
+        names(plotframe) <- c(channel, "Return Rate", "Inflection Point")
+        if(xy_only){return(plotframe)}
         plotexp <- substitute(
                 ggplot2::ggplot(plotframe, ggplot2::aes(x = chan, y = `Return Rate`)),
             list(chan = as.symbol(channel)))
         g <- eval(plotexp)
 
     } else{
-        names(plotframe) <- c(channel, "Return")
+        plotframe <- plotframe[,-3]
+        names(plotframe) <- c(channel, "Return", "Inflection Point")
+        if(xy_only){return(plotframe)}
         g <- eval(
             substitute(
                 ggplot2::ggplot(plotframe, ggplot2::aes(x = chan, y = Return)),
@@ -64,12 +60,13 @@ plot_diminishing_returns <- function(object, channel, rate = FALSE, xy_only = FA
     
     g <- g +
         ggplot2::geom_line() +
-        ggplot2::labs(title = paste(names(plotframe), collapse = " ")) +
+        ggplot2::labs(title = paste(names(plotframe)[1:2], collapse = " ")) +
         ggplot2::scale_x_continuous(labels = x_scale) +
         ggplot2::scale_y_continuous(labels = y_scale)         
     
     if(inflection_point){
-        inflect_x <- plotframe[min(abs(xs - hyps$gammaTrans)),]
+        inflect_x <- plotframe[inflect,]
+        
         g <- g + ggplot2::annotate(geom = "point", x = inflect_x[1,1], y = inflect_x[1,2]) +
             ggplot2::geom_text(data = inflect_x,
                               label = paste("(", x_scale(floor(inflect_x[1,1])), ",", y_scale(floor(inflect_x[1,2])), ")", collapse=""), ...)
@@ -103,33 +100,34 @@ plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE
     if(is.null(channels)){
         channels <- hyps %>%
             dplyr::filter(!is.na(alphas) & !is.na(gammas) & coef > 0) %>%
-            dplyr::pull(predictors)
+            dplyr::pull(.data$predictors)
     } else{
         for(name in channels){
             check_presence(name, hyps$predictors, namecheck=FALSE)
         }
     }
     
-    hyps %<>% dplyr::filter(predictors %in% channels)
+    hyps %<>% dplyr::filter(.data$predictors %in% channels)
 
     total_data <- purrr::map(channels,
                              .f =
                                  function(chn){
-                                     plot_diminishing_returns(object, chn, rate = rate, xy_only = TRUE, inflection_point = inflection_point, x_scale = x_scale, y_scale = y_scale, ...) %>%
-                                         dplyr::mutate(channels = chn) %>%
-                                         dplyr::mutate(gammaTrans = hyps[which(hyps$predictors == chn), "gammaTrans"])
+                                     newtbl <- plot_diminishing_returns(object, chn, rate = rate, xy_only = TRUE, inflection_point = inflection_point, x_scale = x_scale, y_scale = y_scale, ...) %>%
+                                         dplyr::mutate(channels = chn)                                 
+                                     names(newtbl)[1] <- "Media"
+                                     return(newtbl)
                                      })
 
     total_data %<>% purrr::reduce(.f=rbind)
-    
+
     if(xy_only){return(total_data)}
-    
+
     if(rate){
-        names(total_data) <- c("Channel Exposure", "Return Rate", "channels", "gammaTrans")
-        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = `Channel Exposure`, y = `Return Rate`))
+        names(total_data) <- c("Channel Exposure", "Return Rate", "Inflection Point", "channels")
+        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = .data$`Channel Exposure`, y = .data$`Return Rate`))
     } else{
-        names(total_data) <- c("Channel Exposure", "Return", "channels", "gammaTrans")
-        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = `Channel Exposure`, y = Return))
+        names(total_data) <- c("Channel Exposure", "Return", "Inflection Point", "channels")
+        g <- ggplot2::ggplot(total_data, ggplot2::aes(x = .data$`Channel Exposure`, y = .data$Return))
     }
     
     g <- g +
@@ -137,16 +135,13 @@ plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE
         ggplot2::labs(title = paste("Media Channel Return", ifelse(rate, "Rate", ""))) +
         ggplot2::scale_x_continuous(labels = x_scale) +
         ggplot2::scale_y_continuous(labels = y_scale) +
-        ggplot2::facet_wrap(facets = vars(channels), nrow = nrow, ncol = ncol, scale = scale, shrink = shrink, drop = drop, dir = dir, strip.position = strip.position)
+        ggplot2::facet_wrap(facets = ggplot2::vars(channels), nrow = nrow, ncol = ncol, scale = scale, shrink = shrink, drop = drop, dir = dir, strip.position = strip.position)
     
     if(inflection_point){
 
         
         inflect_x <- total_data %>%
-            dplyr::group_by(channels) %>%
-            dplyr::mutate(GTdiff = abs(`Channel Exposure` - gammaTrans) - min(abs(`Channel Exposure` - gammaTrans))) %>%
-            dplyr::filter(GTdiff == min(GTdiff)) %>%
-            dplyr::ungroup()
+            dplyr::filter(`Inflection Point`)
 
         if(rate){
             inflect_x$lab_text = paste("(",x_scale(inflect_x$`Channel Exposure`),", ", y_scale(inflect_x$`Return Rate`), ")", sep = "")
@@ -156,7 +151,7 @@ plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE
         
         g <- g + ggplot2::geom_point(data = inflect_x) +
             ggplot2::geom_text(data = inflect_x,
-                              ggplot2::aes(label = lab_text), ...)
+                              ggplot2::aes(label = .data$lab_text), ...)
         }
     
     return(g)
@@ -182,7 +177,7 @@ plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE
 plot_adstocking <- function(object, channel, start_value = NULL, xy_only = FALSE, ...){
 
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
-        dplyr::filter(predictors == channel)
+        dplyr::filter(.data$predictors == channel)
     
     seqlen <- 10
 
@@ -197,7 +192,7 @@ plot_adstocking <- function(object, channel, start_value = NULL, xy_only = FALSE
     names(plotframe) <- c("Weeks Out", "Effective Exposure")
     if(xy_only){return(plotframe)}
     
-    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
+    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = .data$`Weeks Out`, y = .data$`Effective Exposure`)) +
         ggplot2::labs(title = paste("Effective Exposure Over Time for", channel, collapse = " ")) 
     
     g <- g + ggplot2::geom_line() +
@@ -224,9 +219,9 @@ plot_adstocking_facet <- function(object, channels = NULL, start_values = NULL, 
 
     if(is.null(channels)){
         channels <- dplyr::filter(object$hyps, !is.na(thetas) & coef > 0) %>%
-            dplyr::pull(predictors)
+            dplyr::pull(.data$predictors)
         } else{
-        for(name in channelss){
+        for(name in channels){
             check_presence(name,
                            dplyr::filter(hyps, !is.na(thetas) & coef > 0)$predictors,
                            namecheck=FALSE)
@@ -234,7 +229,7 @@ plot_adstocking_facet <- function(object, channels = NULL, start_values = NULL, 
     }
     
     hyps <- coef(object, complete = TRUE, params = TRUE) %>%
-        dplyr::filter(predictors %in% channels)
+        dplyr::filter(.data$predictors %in% channels)
 
     if(is.null(start_values)){start_values <- rep(1000, times=length(channels))}
     if(length(start_values) == 1){start_values <- rep(start_values, times=length(channels))}
@@ -254,7 +249,7 @@ plot_adstocking_facet <- function(object, channels = NULL, start_values = NULL, 
     
     names(plotframe) <- c("Weeks Out", "Effective Exposure", "channels")
     
-    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = `Weeks Out`, y = `Effective Exposure`)) +
+    g <- ggplot2::ggplot(plotframe, ggplot2::aes(x = .data$`Weeks Out`, y = .data$`Effective Exposure`)) +
         ggplot2::labs(title = "Effective Exposure Over Time") +
         ggplot2::geom_line() +
         ggplot2::facet_wrap(facets = ggplot2::vars(channels)) +

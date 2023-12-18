@@ -8,6 +8,7 @@
 #' @importFrom generics fit
 #' @importFrom magrittr `%>%`
 #' @importFrom magrittr `%<>%`
+#' @importFrom rlang .data
 ## usethis namespace: end
 NULL
 
