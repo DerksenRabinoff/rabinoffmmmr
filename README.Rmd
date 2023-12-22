@@ -138,7 +138,7 @@ dim_returns_plot
 We can clean it up a little by adding formatting. The ellipses in `plot_diminishing_returns` add arguments to the function generating the inflection point.
 
 ```r
-dim_returns_plot <- plot_diminishing_returns(model_fit, "TV Spend", hjust = 1, size = 4) + tidyquant::theme_tq()
+dim_returns_plot <- plot_diminishing_returns(model_fit, "Social Media Spend", hjust = 0, size = 4, rate = TRUE) + tidyquant::theme_tq()
 dim_returns_plot
 ```
 ![Pretty diminishing returns plot](./man/figures/dim_returns_pretty.png)
@@ -147,7 +147,7 @@ dim_returns_plot
 We can summarize the results in a faceted plot.
 
 ```r
-dim_returns_facet <- plot_diminishing_returns_facet(model_fit, rate = TRUE, ncol = 2, vjust = 0, hjust = 1) + tidyquant::theme_tq()
+dim_returns_facet <- plot_diminishing_returns_facet(model_fit, rate = TRUE, ncol = 2, vjust = .5, hjust = 0) + tidyquant::theme_tq()
 adstock_facet <- plot_adstocking_facet(model_fit) + tidyquant::theme_tq()
 dim_returns_facet
 adstock_facet

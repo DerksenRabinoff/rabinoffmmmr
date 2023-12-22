@@ -141,7 +141,7 @@ plot_diminishing_returns_facet <- function(object, channels = NULL, rate = FALSE
 
         
         inflect_x <- total_data %>%
-            dplyr::filter(`Inflection Point`)
+            dplyr::filter(.data$`Inflection Point`)
 
         if(rate){
             inflect_x$lab_text = paste("(",x_scale(inflect_x$`Channel Exposure`),", ", y_scale(inflect_x$`Return Rate`), ")", sep = "")
