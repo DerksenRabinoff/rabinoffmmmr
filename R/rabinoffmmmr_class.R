@@ -21,6 +21,7 @@
 #' @param country The country code for the "Prophet" component of the analysis
 #'
 #' @return A list. The first element is a list of length 2 containing the "lower" and "upper" arguments to the GA::de function. The second element is a function which takes a solution from the GA::de function and casts it back into named hyperparameter vectors. The third and final value is the fitness function.
+#' @examples
 mmm_fitness_gen <- function(data, dep_col, date_col, saturated, adstocked, alphas_low = NULL, alphas_high = NULL, gammas_low = NULL, gammas_high = NULL, thetas_low = NULL, thetas_high = NULL, seed = 1234, country = "CA"){
 
                                         #Function to expand the boundary variables (e.g. alphas_low) to include all relevant variables (not just the one the user specified)
