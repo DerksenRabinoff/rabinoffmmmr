@@ -21,3 +21,14 @@ The transformed vector
 \description{
 Like saturation_hill_trans, but the derivative of the curve
 }
+\examples{
+
+set.seed(1234)
+input <- rnorm(20, 10, 5)
+
+input
+
+saturation_hill_trans_deriv(input, 1, 7)
+
+
+}

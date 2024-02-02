@@ -72,3 +72,44 @@ test_that("prophetize_df works", {
     expect_true(is.numeric(prophetized$holidays))
     
 })
+
+test_that("apply_media_transforms works", {
+
+    hyps <- data.frame(
+        predictors = c("TV Spend", "Radio Spend", "Online Video Spend", "Social Media Spend", "Search Ads Spend", "Direct Mail Spend"),
+        alphas = c(.5, .7, 2, 3, NA, NA),
+        gammas = c(.4, .3, .8, 1, NA, NA),
+        thetas = c(NA, .2, .5, NA, NA, .9),
+        gammaTrans = c(4444, 3333, 2222, 1111, NA, NA)
+    )
+
+    new_media_transform <- apply_media_transforms(historical_ad_spends, hyps)
+
+    new_media_transform_gt <- apply_media_transforms(historical_ad_spends, hyps, compute_gammatrans=FALSE)
+    
+    expect_true(all(new_media_transform$`Search Ads Spend` == historical_ad_spends$`Search Ads Spend`))
+    radio_adstocked <- adstock_geometric(historical_ad_spends$`Radio Spend`, .2)
+    
+    expect_true(all(new_media_transform$`Radio Spend` ==
+                    radio_adstocked %>%
+                    saturation_hill_trans(
+                        .7,
+                        gamma_to_gammatrans(radio_adstocked, .3))
+                    ))
+
+    expect_true(all(new_media_transform$`Direct Mail Spend` == adstock_geometric(historical_ad_spends$`Direct Mail Spend`, .9)))
+
+    expect_true(all(new_media_transform$`TV Ads` ==
+                    saturation_hill_trans(
+                        historical_ad_spends$`TV Ads`,
+                        .5,
+                        gamma_to_gammatrans(historical_ad_spends$`TV Ads`, .4))))
+
+    expect_true(all(new_media_transform_gt$`Radio Spend` ==
+                    radio_adstocked %>%
+                    saturation_hill_trans(
+                        .7,
+                        3333)
+                    ))
+    
+})

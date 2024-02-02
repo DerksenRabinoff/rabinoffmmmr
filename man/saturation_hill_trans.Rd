@@ -21,3 +21,13 @@ The transformed vector
 \description{
 Applies diminishing returns transformation on media exposure vector
 }
+\examples{
+
+set.seed(1234)
+input <- rnorm(20, 10, 5)
+
+input
+
+saturation_hill_trans(input, 1, 7)
+
+}

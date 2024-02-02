@@ -19,3 +19,11 @@ The gammatrans parameter (a single numeric value)
 \description{
 Given a dataframe, and a dataframe of alpha, gamma, and theta parameters, this function applies adstocking and diminishing returns effects to the original dataframe.
 }
+\examples{
+
+hyps <- coef(model_fit, params = TRUE)
+print(hyps)
+
+apply_media_transforms(historical_ad_spends, hyps)
+
+}

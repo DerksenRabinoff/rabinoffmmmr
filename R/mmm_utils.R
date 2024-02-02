@@ -20,11 +20,7 @@
 #'
 #' input
 #'
-#'  [1]  3.964671 11.387146 15.422206 -1.728489 12.145623 12.530279  7.126300  7.266841  7.177740  5.549811  7.614037 [12]  5.008068  6.118731 10.322294 14.797470  9.448573  7.444952  5.444023  5.814142 22.079176
-#'
 #' saturation_hill_trans(input, 1, 7)
-#'
-#' [1]  0.3615860  0.6192993  0.6878095 -0.3278924  0.6343812  0.6415822  0.5044704  0.5093518  0.5062683  0.4422227 [11]  0.5210084  0.4170586  0.4664118  0.5958965  0.6788618  0.5744312  0.5154017  0.4374809  0.4537285  0.7592779
 #' 
 #' @export
 saturation_hill_trans <- function(input, alpha, gammatrans, na.rm = TRUE){
@@ -53,11 +49,7 @@ saturation_hill_trans <- function(input, alpha, gammatrans, na.rm = TRUE){
 #'
 #' input
 #'
-#'  [1]  3.964671 11.387146 15.422206 -1.728489 12.145623 12.530279  7.126300  7.266841  7.177740  5.549811  7.614037 [12]  5.008068  6.118731 10.322294 14.797470  9.448573  7.444952  5.444023  5.814142 22.079176
-#'
 #' saturation_hill_trans_deriv(input, 1, 7)
-#'
-#'  [1] 0.058224640 0.020704721 0.013923274 0.251899744 0.019096730 0.018351904 0.035078513 0.034390811 0.034824431 [10] 0.044445079 0.032776129 0.048545813 0.040673769 0.023328522 0.014732819 0.025872692 0.033547936 0.045203955 [19] 0.042630360 0.008278161
 #'
 #' 
 #' @export
@@ -86,10 +78,7 @@ saturation_hill_trans_deriv <- function(input, alpha, gammatrans, na.rm = TRUE){
 #'
 #' input
 #'
-#'  [1]  3.964671 11.387146 15.422206 -1.728489 12.145623 12.530279  7.126300  7.266841  7.177740  5.549811  7.614037 [12]  5.008068  6.118731 10.322294 14.797470  9.448573  7.444952  5.444023  5.814142 22.079176
-#'
 #' adstock_geometric(input, .5)
-#' [1]  3.964671 13.369482 22.106947  9.324985 16.808116 20.934337 17.593469 16.063575 15.209528 13.154575 14.191324 [12] 12.103730 12.170595 16.407592 23.001266 20.949206 17.919555 14.403801 13.016042 28.587197 
 #' 
 #' @export
 adstock_geometric <- function(input, decay){
@@ -141,6 +130,13 @@ check_presence <- function(toCheck, vec, namecheck = TRUE){
 #' @param hyps A dataframe storing the hyperparameters. It needs four columns: A "predictors" column identifying the variables to be transformed, an "alphas" column with the alpha parameter for each predictor, a "gammas" columns with the gamma parameter for each predictor, and a "thetas" column for each theta paramter for each predictor. For non-saturated variables, leave alphas and gammas as "NA". For non-adstocked variables leave thetas as NA.
 #' @param compute_gammatrans Defaults to TRUE. If TRUE, the gammaTrans value for each parameter will be computed for each saturated variable. If false, gammaTrans must be a column in the "hyps" dataframe.
 #' @return The gammatrans parameter (a single numeric value)
+#'
+#' @examples
+#'
+#' hyps <- coef(model_fit, params = TRUE)
+#' print(hyps)
+#'
+#' apply_media_transforms(historical_ad_spends, hyps)
 #' 
 #' @export
 apply_media_transforms <- function(data, hyps, compute_gammatrans = TRUE){

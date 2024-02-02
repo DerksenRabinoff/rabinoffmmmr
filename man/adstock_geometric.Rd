@@ -17,3 +17,12 @@ The transformed vector
 \description{
 Applies geometric adstocking to vector
 }
+\examples{
+set.seed(1234)
+input <- rnorm(20, 10, 5)
+
+input
+
+adstock_geometric(input, .5)
+
+}
